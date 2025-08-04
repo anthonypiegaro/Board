@@ -12,7 +12,7 @@ export function HeroButton() {
 
   if (session.data?.user) {
     return (
-      <Button className="hover:bg-fuchsia-300 dark:hover:bg-fuchsia-500 hover:text-foreground transition-all" asChild>
+      <Button className="active:scale-97 active:transition-all active:duration-150" asChild>
         <Link href="/dashboard">
           Dashboard
           <ArrowRight />
@@ -22,12 +22,6 @@ export function HeroButton() {
   }
 
   return (
-    // <Button className="hover:bg-fuchsia-300 dark:hover:bg-fuchsia-500 hover:text-foreground transition-all" asChild>
-    //   <Link href="/auth">
-    //     Let's go
-    //     <ArrowRight />
-    //   </Link>
-    // </Button>
     <GoogleAuthButton />
   )
 }
