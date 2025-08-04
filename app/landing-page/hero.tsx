@@ -1,7 +1,8 @@
-import { ArrowRight } from "lucide-react";
+import Link from "next/link"
+import { ArrowRight } from "lucide-react"
 
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 export function Hero() {
   return (
@@ -16,9 +17,11 @@ export function Hero() {
         </span>
       </h1>
       <div className="w-full flex justify-center mt-5 sm:mt-7">
-        <Button className="hover:bg-fuchsia-300 dark:hover:bg-fuchsia-500 hover:text-foreground transition-all">
-          Let's go
-          <ArrowRight />
+        <Button className="hover:bg-fuchsia-300 dark:hover:bg-fuchsia-500 hover:text-foreground transition-all" asChild>
+          <Link href="/auth">
+            Let's go
+            <ArrowRight />
+          </Link>
         </Button>
       </div>
     </section>
