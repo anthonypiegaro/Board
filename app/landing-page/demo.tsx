@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils"
 
 export function Demo() {
   return (
-    <div className="w-fit mx-auto border border-slate-50 rounded-xl p-4 backdrop-blur-md bg-gray-50/30">
+    <div className="w-fit mx-auto border border-slate-50 rounded-xl p-4 backdrop-blur-md bg-gray-50/30 mb-10">
       <div className="border border-slate-50 rounded-lg p-4 backdrop-blur-md bg-gray-50/20">
         <div className="relative bg-neutral-300 dark:bg-neutral-500 rounded-md h-150 w-[80dvw] md:w-[650px] lg:w-[950px] xl:w-[1150px] 2xl:w-[1250px] sm:p-3 lg:pl-40">
           <div className="max-lg:hidden absolute top-0 left-0 bottom-0 w-40 h-full pt-4 flex flex-col">
@@ -113,7 +113,7 @@ export function Demo() {
                 <AddCardButton />
               </div>
               <div className="p-2 rounded-md bg-neutral-300 dark:bg-neutral-600 dark:border dark:border-neutral-500 shrink-0">
-                <div className="flex items-center rounded-md hover:bg-fuchsia-100/80 transition-all gap-x-1 px-2 py-1 cursor-pointer">
+                <div className="flex items-center rounded-md hover:bg-fuchsia-100/80 dark:hover:bg-fuchsia-400/80 transition-all gap-x-1 px-2 py-1 cursor-pointer">
                   <Plus className="w-4 h-4" />
                   <h3 className="font-semibold">
                     Add another list

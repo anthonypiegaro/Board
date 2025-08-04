@@ -132,6 +132,7 @@
   }
   100% {
     transform: translateY(1000px);
+    height: 0;
   }
 }
 
