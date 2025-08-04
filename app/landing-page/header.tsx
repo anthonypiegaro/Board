@@ -8,7 +8,7 @@ export function Header() {
     <nav className="flex justify-between bg-indigo-50/50 bg-gradient-backdrop-blur-md w-[calc(100%---spacing(4))] sm:w-[calc(80%+--spacing(8))] mx-auto mt-2 rounded-lg px-4 py-2">
       <div className="flex items-center gap-x-1 font-bold">
         <SquareKanban className="w-6 h-6 font-semibold" />
-        <h3 className="text-lg font-semibold">Boards</h3>
+        <h3 className="text-lg font-semibold">Board</h3>
       </div>
       <div className="flex items-center gap-x-2">
         <a 
