@@ -1,5 +1,8 @@
-import { ThemeTrigger } from "@/components/theme-trigger"
 import { SquareKanban } from "lucide-react"
+
+import { ThemeTrigger } from "@/components/theme-trigger"
+
+import { Breadcrumb } from "./breadrcumb"
 
 export default function Layout({
   children
@@ -15,26 +18,7 @@ export default function Layout({
             Board
           </div>
           <div className="h-5 w-[2px] bg-neutral-300 dark:bg-neutral-600 rounded-sm" />
-          <div>
-            Bread Crumb Here
-            {/* 
-              Bread crumbs go here. WIll need to find good way to map them,
-              The bread crumb may end up beong a client component so I can
-              have the name be in sync with the route. FOr exmaple, when I 
-              have a board open, the bread crumb will gp from project to 
-              board to the board name.
-
-              for example if the url is
-              dashboard/project/{project_id}/board/{board id}
-
-              the bread crumb should be somthing like
-
-              dashboard / project / {project-name} / board / {board-name}
-
-              and when on mobile, we may just show if you are on the 
-              dashboard or on th eprojects or board page lol
-            */}
-          </div>
+          <Breadcrumb />
           <ThemeTrigger className="ml-auto hover:bg-fuchsia-200/60 dark:hover:bg-fuchsia-400/60" size="size-6"/>
         </div>
         <div className="grow overflow-auto">

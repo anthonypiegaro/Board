@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { toast } from "sonner"
@@ -9,68 +10,78 @@ import * as z from "zod/v4"
 
 import { Button } from "@/components/ui/button"
 import { 
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle
-} from "@/components/ui/dialog"   
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle 
+} from "@/components/ui/dialog"
 import {
   Form,
   FormControl,
   FormField,
-  FormItem,
   FormLabel,
+  FormItem,
   FormMessage
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 
-import { createProject } from "./create-project.action"
+import { createBoard } from "./create-board.action"
 
-const createProjectSchema = z.object({
+const createBoardSchema = z.object({
   id: z.uuid(),
-  name: z.string().min(1, "name is required")
+  projectId: z.uuid(),
+  name: z.string().min(1, "Name is required")
 })
 
-export type CreateProjectSchema = z.infer<typeof createProjectSchema>
+export type CreateBoardSchema = z.infer<typeof createBoardSchema>
 
-export function CreateProjectDialog({
+export function CreateBoardDialog({
   open,
   onOpenChange,
-  onSuccess
-}: {  
+  projectId
+}: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSuccess: (project: CreateProjectSchema) => void
+  projectId: string
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const form = useForm<CreateProjectSchema>({
-    resolver: zodResolver(createProjectSchema),
+  const router = useRouter()
+
+  const form = useForm<CreateBoardSchema>({
+    resolver: zodResolver(createBoardSchema),
     defaultValues: {
       id: uuidv4(),
+      projectId: projectId,
       name: ""
     }
   })
 
+  useEffect(() => {
+    form.setValue("projectId", projectId)
+  }, [projectId])
+
   const handleOpenChange = (open: boolean) => {
     form.reset({
       id: uuidv4(),
-      name: ""
+      name: "",
+      projectId: ""
     })
+
     onOpenChange(open)
   }
 
-  const onSubmit = async (values: CreateProjectSchema) => {
+  const onSubmit = async (values: CreateBoardSchema) => {
     setIsSubmitting(true)
 
-    await createProject(values)
+    await createBoard(values)
       .then(() => {
-        toast.success("Success", {
-          description: `Project "${values.name}" has been created successfully`
+        toast.success("Suucess", {
+          description: `Board "${values.name}" has been created successfully`
         })
-        onSuccess(values)
+        router.push(`/dashboard/board/${values.id}`)
         handleOpenChange(false)
-      })  
+      })
       .catch(e => {
         toast.error("Error", {
           description: e.message
@@ -85,7 +96,7 @@ export function CreateProjectDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            Create Project
+            Create Board
           </DialogTitle>
         </DialogHeader>
         <Form {...form}>
@@ -103,11 +114,8 @@ export function CreateProjectDialog({
                 </FormItem>
               )}
             />
-            <Button 
-              className="ml-auto" 
-              disabled={!form.formState.isDirty || isSubmitting}
-            >
-              {isSubmitting ? "Creating project..." : "Create Project"}
+            <Button type="submit" className="ml-auto" disabled={!form.formState.isDirty || isSubmitting}>
+              {isSubmitting ? "Creating board..." : "Create Board"}
             </Button>
           </form>
         </Form>

@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils"
 
 import { Project } from "./page"
 import { CreateProjectDialog, CreateProjectSchema } from "./create-project-dialog"
+import { CreateBoardDialog } from "./create-board-dialog"
 
 const gradient = [
   "from-indigo-300 to-fuchsia-600",
@@ -26,12 +27,11 @@ export function ProjectList({
   const [projects, setProjects] = useState<Project[]>(initProjects)
   const [projectNameFilter, setProjectNameFilter] = useState("")
   const [createProjectDialogOpen, setCreateProjectDialogOpen] = useState(false)
+  const [currentCreateBoardProjectId, setCurrentCreateBoardProjectId] = useState("")
 
   const filteredProjects = useMemo(() => {
     return projects.filter(project => project.name.toLowerCase().includes(projectNameFilter.toLowerCase()))
   }, [projects, projectNameFilter])
-
-  const router = useRouter()
 
   const handleProjectCreation = (values: CreateProjectSchema) => {
     setProjects(prev => [
@@ -46,12 +46,25 @@ export function ProjectList({
     setCreateProjectDialogOpen(false)
   }
 
+  const handleCreateBoardDialogOpenChange = (open: boolean) => {
+    if (!open) {
+      setCurrentCreateBoardProjectId("")
+    }
+  }
+
+  const createBoardDialogOpen = currentCreateBoardProjectId !== ""
+
   return (
     <>
       <CreateProjectDialog 
         open={createProjectDialogOpen}
         onOpenChange={setCreateProjectDialogOpen}
         onSuccess={handleProjectCreation}
+      />
+      <CreateBoardDialog 
+        open={createBoardDialogOpen}
+        onOpenChange={handleCreateBoardDialogOpenChange}
+        projectId={currentCreateBoardProjectId}
       />
       <div className="w-full px-2 pb-10">
         <div className="w-full flex gap-4 my-10">
@@ -81,9 +94,9 @@ export function ProjectList({
                     </a>
                   )
                 })}
-                <div onClick={() => null} className="shrink-0 transition-all duration-150 ring-3 ring-transparent hover:ring-border flex flex-col overflow-hidden w-50 h-50 rounded-md bg-neutral-300 dark:bg-neutral-600">
+                <div onClick={() => setCurrentCreateBoardProjectId(project.id)} className="group cursor-pointer shrink-0 transition-all duration-150 ring-3 ring-transparent hover:ring-border flex flex-col overflow-hidden w-50 h-50 rounded-md bg-neutral-300 dark:bg-neutral-600">
                   <div className="grow bg-gradient-to-tr from-slate-400 to-slate-800" />
-                  <p className="shrink-0 p-2 flex gap-x-1">
+                  <p className="group-hover:text-muted-foreground transition-all duration-150 shrink-0 p-2 flex gap-x-1">
                     <Plus />
                     Build new board
                   </p>
