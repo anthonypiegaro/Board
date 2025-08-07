@@ -1,3 +1,6 @@
+import { BoardPage } from "./board"
+import { getBoard } from "./get-board"
+
 export default async function Board({
   params
 }: {
@@ -5,7 +8,7 @@ export default async function Board({
 }) {
   const { id } = await params
 
-  // function that grabs the data
+  const board = await getBoard(id)
 
-  return <div>Board Id: {id}</div>
+  return <BoardPage board={board} />
 }
