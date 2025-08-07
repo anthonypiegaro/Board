@@ -8,86 +8,94 @@ import { v4 as uuidv4 } from "uuid"
 import * as z from "zod/v4"
 
 import { Button } from "@/components/ui/button"
-import { 
+import {
   Dialog, 
   DialogContent, 
   DialogHeader, 
   DialogTitle 
 } from "@/components/ui/dialog"
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage
+import { 
+  Form, 
+  FormControl, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormMessage 
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 
-import { createList } from "./create-list.action"
+import { createCard } from "./create-card.action"
 
-const createListSchema = z.object({
-  boardId: z.uuid(),
-  orderNumber: z.number(),
+const createCardSchema = z.object({
+  listId: z.uuid(),
   id: z.uuid(),
-  name: z.string().min(1, "Name is requried")
+  name: z.string().min(1, "Name is required"),
+  description: z.string(),
+  orderNumber: z.number()
 })
 
-export type CreateListSchema = z.infer<typeof createListSchema>
+export type CreateCardSchema = z.infer<typeof createCardSchema>
 
-export function CreateListDialog({
+export function CreateCardDialog({
   open,
-  onOpenChange,
+  onClose,
   onSuccess,
-  boardId,
+  listId,
   orderNumber
 }: {
   open: boolean
-  onOpenChange: (open: boolean) => void
-  onSuccess: (list: CreateListSchema) => void
-  boardId: string
+  onClose: () => void
+  onSuccess: (card: CreateCardSchema) => void
+  listId: string
   orderNumber: number
 }) {
-  const form = useForm<CreateListSchema>({
-    resolver: zodResolver(createListSchema),
+  const form = useForm<CreateCardSchema>({
+    resolver: zodResolver(createCardSchema),
     defaultValues: {
-      boardId: boardId,
-      orderNumber: orderNumber,
+      listId: listId,
       id: uuidv4(),
-      name: ""
+      name: "",
+      description: "",
+      orderNumber: orderNumber
     }
   })
 
   useEffect(() => {
     form.reset({
-      boardId: boardId,
-      orderNumber: orderNumber,
+      listId: listId,
       id: uuidv4(),
-      name: ""
+      name: "",
+      description: "",
+      orderNumber: orderNumber
     })
-  }, [boardId, orderNumber])
+  }, [listId, orderNumber])
 
-  const onSubmit = (values: CreateListSchema) => {
-    // createList(values)
+  const onSubmit = (values: CreateCardSchema) => {
+    // createCard(values)
     form.reset({
-      boardId: boardId,
-      orderNumber: orderNumber,
+      listId: listId,
       id: uuidv4(),
-      name: ""
+      name: "",
+      description: "",
+      orderNumber: orderNumber
     })
-    toast.success(`Added "${values.name}" list`)
+    onClose()
+    toast.success(`Added "${values.name}" card`)
     onSuccess(values)
   }
 
   const handleOpenChange = (open: boolean) => {
     form.reset({
-      boardId: boardId,
-      orderNumber: orderNumber,
+      listId: listId,
       id: uuidv4(),
-      name: ""
+      name: "",
+      description: "",
+      orderNumber: orderNumber
     })
 
-    onOpenChange(open)
+    if (!open) {
+      onClose()
+    }
   }
 
   return (
@@ -95,7 +103,7 @@ export function CreateListDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            Create List
+            Create Card
           </DialogTitle>
         </DialogHeader>
         <Form {...form}>
@@ -114,7 +122,7 @@ export function CreateListDialog({
               )}
             />
             <Button className="ml-auto" disabled={!form.formState.isDirty} type="submit">
-              Create List
+              Create Card
             </Button>
           </form>
         </Form>
