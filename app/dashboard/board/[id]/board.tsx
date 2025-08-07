@@ -1,59 +1,57 @@
+"use client"
+
+import { useState } from "react"
 import { Plus, SquareCheck, Text } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 
-export type ChecklistItem = {
-  id: string
-  name: string
-  completed: boolean
-  orderNumber: number
-}
-
-export type CardChecklist = {
-  checklistId: string
-  name: string
-  type: "checklist"
-  checklistItems: ChecklistItem[]
-}
-
-export type CardEntity = { entityId: string, orderNumber: number } & CardChecklist
-
-export type Card = {
-  id: string
-  name: string
-  description: string
-  orderNumber: number
-  cardEntities: CardEntity[]
-}
-
-export type List = {
-  id: string
-  name: string
-  orderNumber: number
-  cards: Card[]
-}
-
-export type Board = {
-  id: string
-  name: string
-  lists: List[]
-}
+import { Board, Card, List } from "./types"
+import { CreateListDialog, CreateListSchema } from "./create-list-dialog"
 
 export function BoardPage({
-  board
+  initBoard
 }: {
-  board: Board
+  initBoard: Board
 }) {
+  const [board, setBoard] = useState<Board>(initBoard)
+  const [createListDialogOpen, setCreateListDialogOpen] = useState(false)
+
+  const handleCreateListSuccess = (list: CreateListSchema) => {
+    const newList: List = {
+      id: list.id,
+      name: list.name,
+      orderNumber: list.orderNumber,
+      cards: []
+    }
+
+    setBoard(prev => {
+      return ({
+        ...prev,
+        lists: [...prev.lists, newList]
+      })
+    })
+    setCreateListDialogOpen(false)
+  }
+
   return (
-    <div className="w-full h-full p-4 overflow-auto">
-      <Header name={board.name} />
-      <div className="flex flex-nowrap gap-x-4">
-        {board.lists.map(list => (
-          <List list={list} />
-        ))}
+    <>
+      <CreateListDialog 
+        open={createListDialogOpen}
+        onOpenChange={setCreateListDialogOpen}
+        boardId={board.id}
+        orderNumber={board.lists.length}
+        onSuccess={handleCreateListSuccess}
+      />
+      <div className="w-full h-full p-4 overflow-auto">
+        <Header name={board.name} />
+        <div className="flex flex-nowrap items-start gap-x-4">
+          {board.lists.map(list => (
+            <BoardList key={list.id} list={list} />
+          ))}
+          <AddListButton onClick={() => setCreateListDialogOpen(true)} />
+        </div>
       </div>
-      <AddListButton />
-    </div>
+    </>
   )
 }
 
@@ -69,32 +67,37 @@ function Header({
   )
 }
 
-function List({
+function BoardList({
   list
 }: {
   list: List
 }) {
   return (
-    <div className="flex flex-col gap-y-4 p-2 rounded-md bg-card">
+    <div className="w-75 p-2 rounded-md bg-neutral-300 dark:bg-neutral-600 dark:border dark:border-neutral-500 shrink-0">
       <div>
-        <h3 className="text-lg font-semibold">
+        <h3 className="p-2 text-lg font-semibold">
           {list.name}
         </h3>
       </div>
       <div className="flex flex-col gap-y-2">
         {list.cards.map(card => (
-          <Card card={card} />
+          <BoardCard card={card} />
         ))}
       </div>
-      <Button variant="ghost" className="flex items-center">
-        <Plus className="h-4 w-4" />
-        Add card
+      <Button 
+        variant="ghost" 
+        className="flex items-center w-full justify-start rounded-md hover:bg-fuchsia-100/80 dark:hover:bg-fuchsia-400/80 transition-all gap-x-1 px-2 py-1 cursor-pointer"
+      >
+        <Plus className="w-4 h-4" />
+        <h3 className="font-medium">
+          Add a card
+        </h3>
       </Button>
     </div>
   )
 }
 
-function Card({
+function BoardCard({
   card
 }: {
   card: Card
@@ -131,13 +134,17 @@ function Card({
   )
 }
 
-function AddListButton() {
+function AddListButton({ onClick }: { onClick: () => void }) {
   return (
-    <div className="w-55 p-2 rounded-md bg-neutral-300 dark:bg-neutral-600 dark:border dark:border-neutral-500 shrink-0">
-      <Button variant="ghost" className="flex items-center w-full justify-start rounded-md hover:bg-fuchsia-100/80 dark:hover:bg-fuchsia-400/80 transition-all gap-x-1 px-2 py-1 cursor-pointer">
+    <div className="w-75 p-2 rounded-md bg-neutral-300 dark:bg-neutral-600 dark:border dark:border-neutral-500 shrink-0">
+      <Button 
+        variant="ghost" 
+        className="flex items-center w-full justify-start rounded-md hover:bg-fuchsia-100/80 dark:hover:bg-fuchsia-400/80 transition-all gap-x-1 px-2 py-1 cursor-pointer"
+        onClick={onClick}
+      >
         <Plus className="w-4 h-4" />
         <h3 className="font-medium">
-          Add a card
+          Add a list
         </h3>
       </Button>
     </div>

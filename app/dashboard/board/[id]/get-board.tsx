@@ -16,7 +16,7 @@ import {
 } from "@/db/schema"
 import { auth } from "@/lib/auth"
 
-import { Board } from "./board"
+import { Board } from "./types"
 
 export const getBoard = async (id: string): Promise<Board> => {
   const session = await auth.api.getSession({
