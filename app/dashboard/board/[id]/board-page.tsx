@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react"
 import { createPortal } from "react-dom"
 import {
-  closestCenter,
   DndContext, 
   DragEndEvent, 
   DragOverEvent, 
@@ -13,7 +12,7 @@ import {
   UniqueIdentifier, 
   useSensor 
 } from "@dnd-kit/core"
-import { arrayMove, SortableContext, useSortable } from "@dnd-kit/sortable"
+import { arrayMove, horizontalListSortingStrategy, SortableContext, useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { EllipsisVertical, Plus, SquareCheck, Text } from "lucide-react"
 
@@ -228,7 +227,7 @@ function BoardList({
   })
 
   const style = {
-    transform: CSS.Transform.toString(transform),
+    transform: CSS.Translate.toString(transform),
     transition,
   }
 
@@ -251,6 +250,7 @@ function BoardList({
       <div className="flex flex-col gap-y-2">
         <SortableContext
           items={list.cards.map(card => card.id)}
+          strategy={horizontalListSortingStrategy}
         >
           {list.cards.map(card => (
             <BoardCard key={card.id} card={card} listId={list.id} />
@@ -294,7 +294,7 @@ function BoardCard({
   })
 
   const style = {
-    transform: CSS.Transform.toString(transform),
+    transform: CSS.Translate.toString(transform),
     transition,
   }
 
@@ -410,13 +410,9 @@ function ListOverlay({
         </div>
       </div>
       <div className="flex flex-col gap-y-2">
-        <SortableContext
-          items={list.cards.map(card => card.id)}
-        >
-          {list.cards.map(card => (
-            <ListOverlayCard key={card.id} card={card} />
-          ))}
-        </SortableContext>
+        {list.cards.map(card => (
+          <ListOverlayCard key={card.id} card={card} />
+        ))}
         <Button 
           variant="ghost" 
           className="flex items-center w-full justify-start rounded-md hover:bg-fuchsia-100/80 dark:hover:bg-fuchsia-400/80 transition-all gap-x-1 px-2 py-1 cursor-pointer"
