@@ -123,6 +123,95 @@ export function BoardPage({
   }
 
   const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event
+
+    if (!over?.id || activeType === "list") {
+      return
+    }
+
+    const activeContainer = active.data.current?.listId
+    const overContainer = over.data.current?.type === "list" ? over.id : over.data.current?.listId
+
+    if (!activeContainer || !overContainer) {
+      return
+    }
+
+    if (activeContainer !== overContainer) {
+      const activeItems = board.lists.find(list => list.id === activeContainer)?.cards
+      const overItems = board.lists.find(list => list.id === overContainer)?.cards
+
+      if (!activeItems || !overItems) {
+        return
+      }
+
+      const activeIndex = activeItems.findIndex(card => card.id === active.id)
+      const overIndex = overItems.findIndex(card => card.id === over.id)
+
+      let newIndex: number
+
+      if (over.data.current?.type === "list") {
+        newIndex = overItems.length + 1
+      } else {
+        const isBelowOverItem =
+          over &&
+          active.rect.current.translated &&
+          active.rect.current.translated.top >
+            over.rect.top + over.rect.height
+
+        const modifier = isBelowOverItem ? 1 : 0
+
+        newIndex = overIndex >= 0 ? overIndex + modifier : overItems.length + 1
+      }
+
+      setBoard(prev => ({
+        ...prev,
+        lists: board.lists.map(list => {
+          if (list.id === activeContainer) {
+            return {
+              ...list,
+              cards: list.cards.filter(card => card.id !== active.id)
+            }
+          }
+
+          if (list.id === overContainer) {
+            return {
+              ...list,
+              cards: [
+                ...overItems.slice(0, newIndex),
+                activeItems[activeIndex],
+                ...overItems.slice(
+                  newIndex,
+                  overItems.length
+                )
+              ]
+            }
+          }
+
+          return list
+        })
+      }))
+    } else {
+      const oldIndex = board.lists.find(list => list.id === active.data.current?.listId)?.cards.findIndex(card => card.id === active.id) ?? -1
+      const newIndex = board.lists.find(list => list.id === over.data.current?.listId)?.cards.findIndex(card => card.id === over.id) ?? -1
+
+      if (oldIndex < 0 || newIndex < 0) {
+        return
+      }
+
+      setBoard(prev => ({
+        ...prev,
+        lists: prev.lists.map(list => {
+          if (list.id === active.data.current?.listId) {
+            return {
+              ...list,
+              cards: arrayMove(list.cards, oldIndex, newIndex)
+            }
+          }
+
+          return list
+        })
+      }))
+    }
   }
 
   const handleDragEnd = (event: DragEndEvent) => {
