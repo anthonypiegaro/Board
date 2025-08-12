@@ -163,13 +163,16 @@ export function BoardPage({
         newIndex = overIndex >= 0 ? overIndex + modifier : overItems.length + 1
       }
 
-      setBoard(prev => ({
-        ...prev,
+      const newBoard: Board = {
+        ...board,
         lists: board.lists.map(list => {
           if (list.id === activeContainer) {
             return {
               ...list,
-              cards: list.cards.filter(card => card.id !== active.id)
+              cards: list.cards.filter(card => card.id !== active.id).map((card, index) => ({
+                ...card,
+                orderNumber: index
+              }))
             }
           }
 
@@ -183,13 +186,18 @@ export function BoardPage({
                   newIndex,
                   overItems.length
                 )
-              ]
+              ].map((card, index) => ({
+                ...card,
+                orderNumber: index
+              }))
             }
           }
 
           return list
         })
-      }))
+      }
+
+      setBoard(newBoard)
     } else {
       const oldIndex = board.lists.find(list => list.id === active.data.current?.listId)?.cards.findIndex(card => card.id === active.id) ?? -1
       const newIndex = board.lists.find(list => list.id === over.data.current?.listId)?.cards.findIndex(card => card.id === over.id) ?? -1
@@ -204,7 +212,10 @@ export function BoardPage({
           if (list.id === active.data.current?.listId) {
             return {
               ...list,
-              cards: arrayMove(list.cards, oldIndex, newIndex)
+              cards: arrayMove(list.cards, oldIndex, newIndex).map((card, index) => ({
+                ...card,
+                orderNumber: index
+              }))
             }
           }
 
@@ -222,11 +233,22 @@ export function BoardPage({
         const oldIndex = board.lists.findIndex(list => list.id === active.id)
         const newIndex = board.lists.findIndex(list => list.id === over.id)
 
+        const newLists = arrayMove(board.lists, oldIndex, newIndex).map((list, index) => ({
+          ...list,
+          orderNumber: index
+        }))
+
         setBoard(prev => ({
           ...prev,
-          lists: arrayMove(prev.lists, oldIndex, newIndex)
+          lists: newLists
         }))
+
+        // persist new order numbers to the db
       }
+    }
+
+    if (active.data.current?.type === "card") {
+      // persist to the db
     }
   }
 
