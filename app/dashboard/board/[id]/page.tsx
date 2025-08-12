@@ -1,4 +1,4 @@
-import { BoardPage } from "./board"
+import { BoardPage } from "./board-page"
 import { getBoard } from "./get-board"
 
 export default async function Board({
