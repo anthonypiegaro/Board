@@ -17,11 +17,12 @@ import { CSS } from "@dnd-kit/utilities"
 import { EllipsisVertical, Plus, SquareCheck, Text } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 import { Board, Card, List } from "./types"
 import { CreateListDialog, CreateListSchema } from "./create-list-dialog"
 import { CreateCardDialog, CreateCardSchema } from "./create-card-dialog"
-import { cn } from "@/lib/utils"
+import { updateListOrder } from "./update-list-order"
 
 export function BoardPage({
   initBoard
@@ -243,7 +244,15 @@ export function BoardPage({
           lists: newLists
         }))
 
-        // persist new order numbers to the db
+        // persist new list order numbers to the db
+        const updateListOrderData = {
+          boardId: board.id,
+          lists: newLists.map(list => ({
+            listId: list.id,
+            orderNumber: list.orderNumber
+          }))
+        }
+        updateListOrder(updateListOrderData)
       }
     }
 
