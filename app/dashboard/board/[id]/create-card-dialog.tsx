@@ -71,7 +71,7 @@ export function CreateCardDialog({
   }, [listId, orderNumber])
 
   const onSubmit = (values: CreateCardSchema) => {
-    // createCard(values)
+    createCard(values)
     form.reset({
       listId: listId,
       id: uuidv4(),

@@ -68,7 +68,7 @@ export function CreateListDialog({
   }, [boardId, orderNumber])
 
   const onSubmit = (values: CreateListSchema) => {
-    // createList(values)
+    createList(values)
     form.reset({
       boardId: boardId,
       orderNumber: orderNumber,
