@@ -22,7 +22,8 @@ import { cn } from "@/lib/utils"
 import { Board, Card, List } from "./types"
 import { CreateListDialog, CreateListSchema } from "./create-list-dialog"
 import { CreateCardDialog, CreateCardSchema } from "./create-card-dialog"
-import { updateListOrder } from "./update-list-order"
+import { updateListOrder } from "./update-list-order.action"
+import { updateCardListIdAndOrder, UpdateCardListIdAndOrderValues } from "./update-card-list-id-and-order.action"
 
 export function BoardPage({
   initBoard
@@ -36,10 +37,10 @@ export function BoardPage({
   const [createCardDialogOrderNumber, setCreateCardDialogOrderNumber] = useState(-1)
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null)
   const [activeType, setActiveType] = useState<"list" | "card" | null>(null)
-  const [activeListId, setActiveListId] = useState<string | null>(null)
+  const [ogActiveListId, setOgActiveListId] = useState<string | null>(null)
 
   const activeCard = useMemo(
-    () => board.lists.find(list => list.id === activeListId)?.cards.find(card => card.id === activeId),
+    () => board.lists.find(list => list.id === ogActiveListId)?.cards.find(card => card.id === activeId),
     [activeId]
   )
 
@@ -119,7 +120,7 @@ export function BoardPage({
     setActiveType(active.data.current?.type)
     if (active.data.current?.type === "card") {
       setActiveType("card")
-      setActiveListId(active.data.current.listId)
+      setOgActiveListId(active.data.current.listId)
     }
   }
 
@@ -257,7 +258,56 @@ export function BoardPage({
     }
 
     if (active.data.current?.type === "card") {
-      // persist to the db
+      const listId = active.data.current?.listId
+      const cardId = active.id
+
+      if (!listId || !cardId) {
+        return
+      }
+
+      const values: UpdateCardListIdAndOrderValues = {
+        cardId: cardId as string,
+        listId,
+        cards: []
+      }
+
+      if (ogActiveListId !== active.data.current?.listId) {
+        const oldList = board.lists.find(list => list.id === ogActiveListId)
+        const newList = board.lists.find(list => list.id === listId)
+
+        if (!oldList || !newList) {
+          return
+        }
+
+        oldList.cards.forEach((card, index) => {
+          values.cards.push({
+            cardId: card.id,
+            orderNumber: index
+          })
+        })
+
+        newList.cards.forEach((card, index) => {
+          values.cards.push({
+            cardId: card.id,
+            orderNumber: index
+          })
+        })
+      } else {
+        const list = board.lists.find(list => list.id === ogActiveListId)
+
+        if (!list) {
+          return
+        }
+
+        list.cards.forEach((card, index) => {
+          values.cards.push({
+            cardId: card.id,
+            orderNumber: index
+          })
+        })
+      }
+
+      updateCardListIdAndOrder(values)
     }
   }
 
