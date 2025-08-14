@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils"
 import { Board, Card, List } from "./types"
 import { CreateListDialog, CreateListSchema } from "./create-list-dialog"
 import { CreateCardDialog, CreateCardSchema } from "./create-card-dialog"
+import { CardDetailsDialog } from "./card-details-dialog"
 import { updateListOrder } from "./update-list-order.action"
 import { updateCardListIdAndOrder, UpdateCardListIdAndOrderValues } from "./update-card-list-id-and-order.action"
 import { updateBoardName } from "./update-board-name.action"
@@ -40,6 +41,7 @@ export function BoardPage({
   const [activeType, setActiveType] = useState<"list" | "card" | null>(null)
   const [ogActiveListId, setOgActiveListId] = useState<string | null>(null)
   const [boardNameEditing, setBoardNameEditing] = useState(false)
+  const [cardDetailsDialogCard, setCardDetailsDialogCard] = useState<Card | null>(null)
 
   const activeCard = useMemo(
     () => board.lists.find(list => list.id === ogActiveListId)?.cards.find(card => card.id === activeId),
@@ -50,7 +52,6 @@ export function BoardPage({
     () => board.lists.find(list => list.id === activeId),
     [activeId]
   )
-
 
   const handleCreateListSuccess = (list: CreateListSchema) => {
     const newList: List = {
@@ -113,6 +114,28 @@ export function BoardPage({
     setBoard(prev => ({
       ...prev,
       name: name
+    }))
+  }
+
+  const handleCardDetailsDialogOpenChange = (open: boolean) => {
+    if (!open) {
+      setCardDetailsDialogCard(null)
+    }
+  }
+
+  const handleCardDetailsDialogMutationSuccess = (card: Card) => {
+    setBoard(prev => ({
+      ...prev,
+      lists: prev.lists.map(list => ({
+        ...list,
+        cards: list.cards.map(prevCard => {
+          if (prevCard.id === card.id) {
+            return card
+          }
+
+          return prevCard
+        })
+      }))
     }))
   }
 
@@ -341,6 +364,18 @@ export function BoardPage({
         listId={createCardDialogListId}
         orderNumber={createCardDialogOrderNumber}
       />
+      <CardDetailsDialog 
+        open={cardDetailsDialogCard !== null}
+        onOpenChange={handleCardDetailsDialogOpenChange}
+        onSuccess={handleCardDetailsDialogMutationSuccess}
+        card={cardDetailsDialogCard ?? {
+          id: "",
+          name: "",
+          description: "",
+          orderNumber: 0,
+          cardEntities: []
+        }}
+      />
       <div className="w-full h-full p-4 overflow-auto">
         <Header 
           name={board.name} 
@@ -354,7 +389,12 @@ export function BoardPage({
             items={board.lists.map(list => list.id)}
           >
             {board.lists.map(list => (
-              <BoardList key={list.id} list={list} onOpenCreateCardDialog={handleCreateCardDialogOpen} />
+              <BoardList 
+                key={list.id} 
+                list={list} 
+                onOpenCreateCardDialog={handleCreateCardDialogOpen}
+                openCardDetails={setCardDetailsDialogCard}
+              />
             ))}
           </SortableContext>
           <AddListButton onClick={() => setCreateListDialogOpen(true)} />
@@ -461,10 +501,12 @@ function Header({
 
 function BoardList({
   list,
-  onOpenCreateCardDialog
+  onOpenCreateCardDialog,
+  openCardDetails
 }: {
   list: List
   onOpenCreateCardDialog: ({ listId, orderNumber }: { listId: string, orderNumber: number }) => void
+  openCardDetails: (card: Card) => void
 }) {
   const {
     active,
@@ -507,7 +549,12 @@ function BoardList({
           strategy={horizontalListSortingStrategy}
         >
           {list.cards.map(card => (
-            <BoardCard key={card.id} card={card} listId={list.id} />
+            <BoardCard 
+              key={card.id} 
+              card={card} 
+              listId={list.id}
+              openCardDetails={openCardDetails}
+            />
           ))}
         </SortableContext>
         <Button 
@@ -527,10 +574,12 @@ function BoardList({
 
 function BoardCard({
   card,
-  listId
+  listId,
+  openCardDetails
 }: {
   card: Card
   listId: string
+  openCardDetails: (card: Card) => void
 }) {
   const {
     attributes,
@@ -558,6 +607,7 @@ function BoardCard({
         "relative flex flex-col rounded-md border-3 border-transparent bg-neutral-200 dark:bg-neutral-700 dark:ring dark:ring-neutral-500 dark:border-2 hover:border-3 hover:border-neutral-50 dark:hover:border-neutral-500 transition-all text-muted-foreground p-2 cursor-pointer",
         active?.id === card.id && "relative after:absolute after:-inset-1 after:bg-neutral-400 dark:after:bg-neutral-700 after:rounded-md"
       )}
+      onClick={() => openCardDetails(card)}
       {...attributes} {...listeners} style={style} ref={setNodeRef}
     >
       <p className="text-sm font-semibold">
