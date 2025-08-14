@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { ChangeEvent, FormEvent, KeyboardEventHandler, useEffect, useMemo, useState } from "react"
 import { createPortal } from "react-dom"
 import {
   DndContext, 
@@ -24,6 +24,7 @@ import { CreateListDialog, CreateListSchema } from "./create-list-dialog"
 import { CreateCardDialog, CreateCardSchema } from "./create-card-dialog"
 import { updateListOrder } from "./update-list-order.action"
 import { updateCardListIdAndOrder, UpdateCardListIdAndOrderValues } from "./update-card-list-id-and-order.action"
+import { updateBoardName } from "./update-board-name.action"
 
 export function BoardPage({
   initBoard
@@ -38,6 +39,7 @@ export function BoardPage({
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null)
   const [activeType, setActiveType] = useState<"list" | "card" | null>(null)
   const [ogActiveListId, setOgActiveListId] = useState<string | null>(null)
+  const [boardNameEditing, setBoardNameEditing] = useState(false)
 
   const activeCard = useMemo(
     () => board.lists.find(list => list.id === ogActiveListId)?.cards.find(card => card.id === activeId),
@@ -105,6 +107,13 @@ export function BoardPage({
     setCreateCardDialogOpen(false)
     setCreateCardDialogListId("")
     setCreateCardDialogOrderNumber(-1)
+  }
+
+  const handleBoardNameEditSuccess = (name: string) => {
+    setBoard(prev => ({
+      ...prev,
+      name: name
+    }))
   }
 
   const sensor = useSensor(PointerSensor, {
@@ -333,7 +342,13 @@ export function BoardPage({
         orderNumber={createCardDialogOrderNumber}
       />
       <div className="w-full h-full p-4 overflow-auto">
-        <Header name={board.name} />
+        <Header 
+          name={board.name} 
+          boardId={board.id}
+          isEditing={boardNameEditing} 
+          onIsEditingChange={setBoardNameEditing} 
+          onSuccess={handleBoardNameEditSuccess} 
+        />
         <div className="flex flex-nowrap items-start gap-x-4">
           <SortableContext
             items={board.lists.map(list => list.id)}
@@ -364,12 +379,81 @@ export function BoardPage({
 }
 
 function Header({
-  name
+  name,
+  boardId,
+  isEditing,
+  onIsEditingChange,
+  onSuccess
 }: {
   name: string
+  boardId: string
+  isEditing: boolean
+  onIsEditingChange: (isEditing: boolean) => void
+  onSuccess: (name: string) => void
 }) {
+  const [nameInput, setNameInput] = useState("")
+  const [isError, setIsError] = useState(false)
+
+  useEffect(() => {
+    setNameInput(name)
+  }, [name])
+
+  const handleBlur = () => {
+    handleSubmit()
+  }
+
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+
+    if (value.length === 0) {
+      setIsError(true)
+      setNameInput(value)
+    } else {
+      if (value.length < 151) {
+        setNameInput(value)
+      }
+      setIsError(false)
+    }
+  }
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      handleSubmit()
+    }
+  }
+
+  const handleSubmit = () => {
+    if (nameInput.length > 0 && nameInput.length < 151) {
+      updateBoardName({
+        boardId,
+        name: nameInput
+      })
+      onSuccess(nameInput)
+      onIsEditingChange(false)
+    }
+  }
+
+  if (isEditing) {
+    return (
+      <input 
+        className={cn(
+          "text-3xl font-semibold mb-4 focus:outline-none border-b-2 border-transparent focus:border-primary min-w-120",
+          isError && "border-destructive"
+        )}
+        value={nameInput}
+        onChange={handleInputChange}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+        autoFocus
+      />
+    )
+  }
+
   return (
-    <h1 className="text-3xl font-semibold mb-4">
+    <h1 
+      className="text-3xl font-semibold mb-4"
+      onClick={() => onIsEditingChange(true)}
+    >
       {name}
     </h1>
   )
