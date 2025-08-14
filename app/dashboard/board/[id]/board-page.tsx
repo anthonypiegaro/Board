@@ -1,6 +1,6 @@
 "use client"
 
-import { ChangeEvent, FormEvent, KeyboardEventHandler, useEffect, useMemo, useState } from "react"
+import { ChangeEvent, useEffect, useMemo, useState } from "react"
 import { createPortal } from "react-dom"
 import {
   DndContext, 
@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils"
 import { Board, Card, List } from "./types"
 import { CreateListDialog, CreateListSchema } from "./create-list-dialog"
 import { CreateCardDialog, CreateCardSchema } from "./create-card-dialog"
-import { CardDetailsDialog } from "./card-details-dialog"
+import { CardDetailsDialog } from "./card-details-dialog/card-details-dialog"
 import { updateListOrder } from "./update-list-order.action"
 import { updateCardListIdAndOrder, UpdateCardListIdAndOrderValues } from "./update-card-list-id-and-order.action"
 import { updateBoardName } from "./update-board-name.action"
@@ -367,7 +367,7 @@ export function BoardPage({
       <CardDetailsDialog 
         open={cardDetailsDialogCard !== null}
         onOpenChange={handleCardDetailsDialogOpenChange}
-        onSuccess={handleCardDetailsDialogMutationSuccess}
+        onChange={handleCardDetailsDialogMutationSuccess}
         card={cardDetailsDialogCard ?? {
           id: "",
           name: "",
