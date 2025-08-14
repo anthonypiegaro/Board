@@ -1,9 +1,12 @@
 "use client"
 
+import { useRef, useState } from "react"
+
 import { 
   Dialog,
   DialogContent,
   DialogHeader,
+  DialogOverlay,
   DialogTitle
 } from "@/components/ui/dialog"
 
@@ -22,6 +25,8 @@ export function CardDetailsDialog({
   onChange: (card: Card) => void
   card: Card
 }) {
+  const [isFocused, setIsFocused] = useState(false)
+
   const handleOpenChange = (open: boolean) => {
     onOpenChange(open)
   }
@@ -48,7 +53,18 @@ export function CardDetailsDialog({
       open={open} 
       onOpenChange={handleOpenChange}
     >
-      <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
+      <DialogContent 
+        onOpenAutoFocus={e => e.preventDefault()}
+        onPointerDownOutside={e => {
+          if (isFocused) {
+            console.log("Prevent close")
+            e.preventDefault()
+          } else {
+            console.log("Wont prevent close")
+          }
+          console.log(document.activeElement?.tagName)
+        }}
+      >
         <DialogHeader>
           <DialogTitle className="text-2xl">
             {card.name}
@@ -57,6 +73,14 @@ export function CardDetailsDialog({
         <CardDescription
           description={card.description}
           onChange={handleDescriptionChange}
+          onFocus={() => {
+            setIsFocused(true)
+            console.log("Description focused");
+          }}
+          onBlur={() => {
+            setIsFocused(false)
+            console.log("Description blurred");
+          }}
         />
       </DialogContent>
     </Dialog>

@@ -6,10 +6,14 @@ import { Textarea } from "@/components/ui/textarea"
 
 export function CardDescription({
   description,
-  onChange
+  onChange,
+  onFocus,
+  onBlur
 }: {
   description: string
-  onChange: (description: string) => void 
+  onChange: (description: string) => void
+  onFocus: () => void
+  onBlur: () => void
 }) {
   const [descriptionInput, setDescriptionInput] = useState(description)
   const [isError, setIsError] = useState(false)
@@ -26,10 +30,16 @@ export function CardDescription({
     }
   }
 
-  const handleBlur = () => {
+  const handleBlur = async () => {
+    await new Promise(resolve => setTimeout(resolve, 0))
     if (descriptionInput.length <= 5000) {
       onChange(descriptionInput)
     }
+    onBlur()
+  }
+
+  const handleFocus = () => {
+    onFocus()
   }
 
   return (
@@ -40,6 +50,7 @@ export function CardDescription({
         onChange={handleDescriptionInputChange}
         onBlur={handleBlur}
         autoFocus={false}
+        onFocus={handleFocus}
       />
       <p className="text-xs text-right text-muted-foreground">
         {descriptionInput.length}/5000
