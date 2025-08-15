@@ -26,6 +26,7 @@ import { CardDetailsDialog } from "./card-details-dialog/card-details-dialog"
 import { updateListOrder } from "./update-list-order.action"
 import { updateCardListIdAndOrder, UpdateCardListIdAndOrderValues } from "./update-card-list-id-and-order.action"
 import { updateBoardName } from "./update-board-name.action"
+import { updateListName } from "./update-list-name.action"
 
 export function BoardPage({
   initBoard
@@ -136,6 +137,19 @@ export function BoardPage({
           return prevCard
         })
       }))
+    }))
+  }
+
+  const handleListMutation = (list: List) => {
+    setBoard(prev => ({
+      ...prev,
+      lists: prev.lists.map(prevList => {
+        if (prevList.id === list.id) {
+          return list
+        }
+
+        return prevList
+      })
     }))
   }
 
@@ -394,6 +408,7 @@ export function BoardPage({
                 list={list} 
                 onOpenCreateCardDialog={handleCreateCardDialogOpen}
                 openCardDetails={setCardDetailsDialogCard}
+                onListMutation={handleListMutation}
               />
             ))}
           </SortableContext>
@@ -502,12 +517,21 @@ function Header({
 function BoardList({
   list,
   onOpenCreateCardDialog,
-  openCardDetails
+  openCardDetails,
+  onListMutation
 }: {
   list: List
   onOpenCreateCardDialog: ({ listId, orderNumber }: { listId: string, orderNumber: number }) => void
   openCardDetails: (card: Card) => void
+  onListMutation: (list: List) => void
 }) {
+  const [nameInput, setNameInput] = useState(list.name)
+  const [isError, setIsError] = useState(false)
+
+  useEffect(() => {
+    setNameInput(list.name)
+  }, [list])
+
   const {
     active,
     attributes,
@@ -527,6 +551,34 @@ function BoardList({
     transition,
   }
 
+  const handleNameInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+
+    if (value.length === 0) {
+      setIsError(true)
+    } else if (value.length > 150) {
+      return
+    } else {
+      setIsError(false)
+    }
+
+    setNameInput(value)
+  }
+
+  const handleBlur = () => {
+    if (!isError && nameInput !== list.name) {
+      updateListName({
+        listId: list.id,
+        listName: nameInput
+      })
+  
+      onListMutation({
+        ...list,
+        name: nameInput
+      })
+    }
+  }
+
   return (
     <div
       className={cn(
@@ -535,10 +587,16 @@ function BoardList({
       )}
       {...listeners} {...attributes} ref={setNodeRef} style={style}
     >
-      <div className="w-full px-4 py-3 flex justify-between items-center">
-        <h3 className="text-lg font-semibold">
-          {list.name}
-        </h3>
+      <div className="w-full px-2 py-3 flex justify-between items-center">
+        <input 
+          className={cn(
+            "p-2 text-lg font-semibold border border-transparent rounded-md focus:outline-none focus:bg-neutral-400 focus:dark:bg-neutral-700",
+            isError && "border-destructive bg-neutral-400 dark:bg-neutral-700"
+          )}
+          value={nameInput}
+          onChange={handleNameInputChange}
+          onBlur={handleBlur}
+        />
         <div className="p-1 hover:bg-fuchsia-100/80 dark:hover:bg-fuchsia-400/80 rounded-md transition-all">
           <EllipsisVertical className="w-4 h-4" />
         </div>
