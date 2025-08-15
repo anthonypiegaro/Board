@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils"
 import { Board, Card, List } from "./types"
 import { CreateListDialog, CreateListSchema } from "./create-list-dialog"
 import { CreateCardDialog, CreateCardSchema } from "./create-card-dialog"
+import { DeleteCardDialog } from "./delete-card-dialog"
 import { CardDetailsDialog } from "./card-details-dialog/card-details-dialog"
 import { updateListOrder } from "./update-list-order.action"
 import { updateCardListIdAndOrder, UpdateCardListIdAndOrderValues } from "./update-card-list-id-and-order.action"
@@ -43,6 +44,7 @@ export function BoardPage({
   const [ogActiveListId, setOgActiveListId] = useState<string | null>(null)
   const [boardNameEditing, setBoardNameEditing] = useState(false)
   const [cardDetailsDialogCard, setCardDetailsDialogCard] = useState<Card | null>(null)
+  const [cardToDelete, setCardToDelete] = useState<Card | null>(null)
 
   const activeCard = useMemo(
     () => board.lists.find(list => list.id === ogActiveListId)?.cards.find(card => card.id === activeId),
@@ -151,6 +153,26 @@ export function BoardPage({
         return prevList
       })
     }))
+  }
+
+  const handleCardDeletion = (cardId: string) => {
+    setBoard(prev => ({
+      ...prev,
+      lists: prev.lists.map(list => ({
+        ...list,
+        cards: list.cards.filter(card => card.id !== cardId)
+      }))
+    }))
+    setCardToDelete(null)
+    setCardDetailsDialogCard(null)
+  }
+
+  const handleDeleteCardDialogOpenChange = (open: boolean) => {
+    if (!open) {
+      setCardToDelete(null)
+    } else {
+      setCardToDelete(cardDetailsDialogCard)
+    }
   }
 
   const sensor = useSensor(PointerSensor, {
@@ -383,6 +405,19 @@ export function BoardPage({
         onOpenChange={handleCardDetailsDialogOpenChange}
         onChange={handleCardDetailsDialogMutationSuccess}
         card={cardDetailsDialogCard ?? {
+          id: "",
+          name: "",
+          description: "",
+          orderNumber: 0,
+          cardEntities: []
+        }}
+        onOpenDeleteCardDialog={() => handleDeleteCardDialogOpenChange(true)}
+      />
+      <DeleteCardDialog 
+        open={cardToDelete !== null}
+        onOpenChange={handleDeleteCardDialogOpenChange}
+        onSuccess={handleCardDeletion}
+        card={cardToDelete ?? {
           id: "",
           name: "",
           description: "",
