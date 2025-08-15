@@ -1,0 +1,152 @@
+"use client"
+
+import { ChangeEvent, useEffect, useState } from "react"
+import { horizontalListSortingStrategy, SortableContext, useSortable } from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
+import { EllipsisVertical, Plus } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu"
+import { cn } from "@/lib/utils"
+
+import { BoardCard } from "../board-card/board-card"
+import { updateListName } from "../update-list-name.action"
+import { Card, List } from "../types"
+
+export function BoardList({
+  list,
+  onOpenCreateCardDialog,
+  openCardDetails,
+  onListMutation,
+  onOpenDeleteListDialog
+}: {
+  list: List
+  onOpenCreateCardDialog: ({ listId, orderNumber }: { listId: string, orderNumber: number }) => void
+  openCardDetails: (card: Card) => void
+  onListMutation: (list: List) => void
+  onOpenDeleteListDialog: () => void
+}) {
+  const [nameInput, setNameInput] = useState(list.name)
+  const [isError, setIsError] = useState(false)
+
+  useEffect(() => {
+    setNameInput(list.name)
+  }, [list])
+
+  const {
+    active,
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition
+  } = useSortable({
+    id: list.id,
+    data: {
+      type: "list"
+    }
+  })
+
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    transition,
+  }
+
+  const handleNameInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+
+    if (value.length === 0) {
+      setIsError(true)
+    } else if (value.length > 150) {
+      return
+    } else {
+      setIsError(false)
+    }
+
+    setNameInput(value)
+  }
+
+  const handleBlur = () => {
+    if (!isError && nameInput !== list.name) {
+      updateListName({
+        listId: list.id,
+        listName: nameInput
+      })
+  
+      onListMutation({
+        ...list,
+        name: nameInput
+      })
+    }
+  }
+
+  return (
+    <div
+      className={cn(
+        "relative w-75 p-2 rounded-md bg-neutral-300 dark:bg-neutral-600 dark:border dark:border-neutral-500 shrink-0",
+        active?.id === list.id && "after:absolute after:rounded-md after:inset-0 after:bg-background"
+      )}
+      {...listeners} {...attributes} ref={setNodeRef} style={style}
+    >
+      <div className="w-full px-2 py-3 flex justify-between items-center">
+        <input 
+          className={cn(
+            "p-2 text-lg font-semibold border border-transparent rounded-md focus:outline-none focus:bg-neutral-400 focus:dark:bg-neutral-700",
+            isError && "border-destructive bg-neutral-400 dark:bg-neutral-700"
+          )}
+          value={nameInput}
+          onChange={handleNameInputChange}
+          onBlur={handleBlur}
+        />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="p-1 hover:bg-fuchsia-100/80 dark:hover:bg-fuchsia-400/80 rounded-md transition-all">
+              <EllipsisVertical className="w-4 h-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem 
+              variant="destructive" 
+              onClick={async () => {
+                await new Promise(resolve => setTimeout(resolve, 0))
+                onOpenDeleteListDialog()
+              }}
+            >
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      <div className="flex flex-col gap-y-2">
+        <SortableContext
+          items={list.cards.map(card => card.id)}
+          strategy={horizontalListSortingStrategy}
+        >
+          {list.cards.map(card => (
+            <BoardCard 
+              key={card.id} 
+              card={card} 
+              listId={list.id}
+              openCardDetails={openCardDetails}
+            />
+          ))}
+        </SortableContext>
+        <Button 
+          variant="ghost" 
+          className="flex items-center w-full justify-start rounded-md hover:bg-fuchsia-100/80 dark:hover:bg-fuchsia-400/80 transition-all gap-x-1 px-2 py-1 cursor-pointer"
+          onClick={() => onOpenCreateCardDialog({ listId: list.id, orderNumber: list.cards.length })}
+        >
+          <Plus className="w-4 h-4" />
+          <h3 className="font-medium">
+            Add a card
+          </h3>
+        </Button>
+      </div>
+    </div>
+  )
+}

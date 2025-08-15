@@ -12,22 +12,22 @@ import {
   UniqueIdentifier, 
   useSensor 
 } from "@dnd-kit/core"
-import { arrayMove, horizontalListSortingStrategy, SortableContext, useSortable } from "@dnd-kit/sortable"
-import { CSS } from "@dnd-kit/utilities"
+import { arrayMove, SortableContext } from "@dnd-kit/sortable"
 import { EllipsisVertical, Plus, SquareCheck, Text } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
+import { BoardList } from "./board-list/board-list"
 import { Board, Card, List } from "./types"
 import { CreateListDialog, CreateListSchema } from "./create-list-dialog"
 import { CreateCardDialog, CreateCardSchema } from "./create-card-dialog"
 import { DeleteCardDialog } from "./delete-card-dialog"
+import { DeleteListDialog } from "./delete-list-dialog"
 import { CardDetailsDialog } from "./card-details-dialog/card-details-dialog"
 import { updateListOrder } from "./update-list-order.action"
 import { updateCardListIdAndOrder, UpdateCardListIdAndOrderValues } from "./update-card-list-id-and-order.action"
 import { updateBoardName } from "./update-board-name.action"
-import { updateListName } from "./update-list-name.action"
 
 export function BoardPage({
   initBoard
@@ -45,6 +45,7 @@ export function BoardPage({
   const [boardNameEditing, setBoardNameEditing] = useState(false)
   const [cardDetailsDialogCard, setCardDetailsDialogCard] = useState<Card | null>(null)
   const [cardToDelete, setCardToDelete] = useState<Card | null>(null)
+  const [deleteListDialogList, setDeleteListDialogList] = useState<{ listId: string, listName: string, numberOfCards: number } | null>(null)
 
   const activeCard = useMemo(
     () => board.lists.find(list => list.id === ogActiveListId)?.cards.find(card => card.id === activeId),
@@ -173,6 +174,29 @@ export function BoardPage({
     } else {
       setCardToDelete(cardDetailsDialogCard)
     }
+  }
+
+  const handleOpenDeleteListDialog = (list: List) => {
+    setDeleteListDialogList({
+      listId: list.id,
+      listName: list.name,
+      numberOfCards: list.cards.length
+    })
+  }
+
+  const handleDeleteListDialogOpenChange = (open: boolean) => {
+    if (!open) {
+      setDeleteListDialogList(null)
+    }
+  }
+
+  const handleDeleteListSuccess = (listId: string) => {
+    setBoard(prev => ({
+      ...prev,
+      lists: prev.lists.filter(list => list.id !== listId)
+    }))
+
+    handleDeleteListDialogOpenChange(false)
   }
 
   const sensor = useSensor(PointerSensor, {
@@ -425,6 +449,14 @@ export function BoardPage({
           cardEntities: []
         }}
       />
+      <DeleteListDialog 
+        open={deleteListDialogList !== null}
+        onOpenChange={handleDeleteListDialogOpenChange}
+        onSuccess={handleDeleteListSuccess}
+        listId={deleteListDialogList?.listId ?? ""}
+        listName={deleteListDialogList?.listName ?? ""}
+        numberOfCards={deleteListDialogList?.numberOfCards ?? 0}
+      />
       <div className="w-full h-full p-4 overflow-auto">
         <Header 
           name={board.name} 
@@ -444,6 +476,7 @@ export function BoardPage({
                 onOpenCreateCardDialog={handleCreateCardDialogOpen}
                 openCardDetails={setCardDetailsDialogCard}
                 onListMutation={handleListMutation}
+                onOpenDeleteListDialog={() => handleOpenDeleteListDialog(list)}
               />
             ))}
           </SortableContext>
@@ -456,8 +489,8 @@ export function BoardPage({
             {
               activeId 
                 ?  activeType === "list" 
-                  ? activeList && ListOverlay({ list: activeList })
-                  : activeCard && CardOverlay({ card: activeCard })
+                  ? activeList && <ListOverlay list={activeList} />
+                  : activeCard && <CardOverlay card={activeCard} />
                 : null 
             }
           </DragOverlay>,
@@ -546,190 +579,6 @@ function Header({
     >
       {name}
     </h1>
-  )
-}
-
-function BoardList({
-  list,
-  onOpenCreateCardDialog,
-  openCardDetails,
-  onListMutation
-}: {
-  list: List
-  onOpenCreateCardDialog: ({ listId, orderNumber }: { listId: string, orderNumber: number }) => void
-  openCardDetails: (card: Card) => void
-  onListMutation: (list: List) => void
-}) {
-  const [nameInput, setNameInput] = useState(list.name)
-  const [isError, setIsError] = useState(false)
-
-  useEffect(() => {
-    setNameInput(list.name)
-  }, [list])
-
-  const {
-    active,
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition
-  } = useSortable({
-    id: list.id,
-    data: {
-      type: "list"
-    }
-  })
-
-  const style = {
-    transform: CSS.Translate.toString(transform),
-    transition,
-  }
-
-  const handleNameInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-
-    if (value.length === 0) {
-      setIsError(true)
-    } else if (value.length > 150) {
-      return
-    } else {
-      setIsError(false)
-    }
-
-    setNameInput(value)
-  }
-
-  const handleBlur = () => {
-    if (!isError && nameInput !== list.name) {
-      updateListName({
-        listId: list.id,
-        listName: nameInput
-      })
-  
-      onListMutation({
-        ...list,
-        name: nameInput
-      })
-    }
-  }
-
-  return (
-    <div
-      className={cn(
-        "relative w-75 p-2 rounded-md bg-neutral-300 dark:bg-neutral-600 dark:border dark:border-neutral-500 shrink-0",
-        active?.id === list.id && "after:absolute after:rounded-md after:inset-0 after:bg-background"
-      )}
-      {...listeners} {...attributes} ref={setNodeRef} style={style}
-    >
-      <div className="w-full px-2 py-3 flex justify-between items-center">
-        <input 
-          className={cn(
-            "p-2 text-lg font-semibold border border-transparent rounded-md focus:outline-none focus:bg-neutral-400 focus:dark:bg-neutral-700",
-            isError && "border-destructive bg-neutral-400 dark:bg-neutral-700"
-          )}
-          value={nameInput}
-          onChange={handleNameInputChange}
-          onBlur={handleBlur}
-        />
-        <div className="p-1 hover:bg-fuchsia-100/80 dark:hover:bg-fuchsia-400/80 rounded-md transition-all">
-          <EllipsisVertical className="w-4 h-4" />
-        </div>
-      </div>
-      <div className="flex flex-col gap-y-2">
-        <SortableContext
-          items={list.cards.map(card => card.id)}
-          strategy={horizontalListSortingStrategy}
-        >
-          {list.cards.map(card => (
-            <BoardCard 
-              key={card.id} 
-              card={card} 
-              listId={list.id}
-              openCardDetails={openCardDetails}
-            />
-          ))}
-        </SortableContext>
-        <Button 
-          variant="ghost" 
-          className="flex items-center w-full justify-start rounded-md hover:bg-fuchsia-100/80 dark:hover:bg-fuchsia-400/80 transition-all gap-x-1 px-2 py-1 cursor-pointer"
-          onClick={() => onOpenCreateCardDialog({ listId: list.id, orderNumber: list.cards.length })}
-        >
-          <Plus className="w-4 h-4" />
-          <h3 className="font-medium">
-            Add a card
-          </h3>
-        </Button>
-      </div>
-    </div>
-  )
-}
-
-function BoardCard({
-  card,
-  listId,
-  openCardDetails
-}: {
-  card: Card
-  listId: string
-  openCardDetails: (card: Card) => void
-}) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    active
-  } = useSortable({
-    id: card.id,
-    data: {
-      type: "card",
-      listId
-    }
-  })
-
-  const style = {
-    transform: CSS.Translate.toString(transform),
-    transition,
-  }
-
-  return (
-    <div 
-      className={cn(
-        "relative flex flex-col rounded-md border-3 border-transparent bg-neutral-200 dark:bg-neutral-700 dark:ring dark:ring-neutral-500 dark:border-2 hover:border-3 hover:border-neutral-50 dark:hover:border-neutral-500 transition-all text-muted-foreground p-2 cursor-pointer",
-        active?.id === card.id && "relative after:absolute after:-inset-1 after:bg-neutral-400 dark:after:bg-neutral-700 after:rounded-md"
-      )}
-      onClick={() => openCardDetails(card)}
-      {...attributes} {...listeners} style={style} ref={setNodeRef}
-    >
-      <p className="text-sm font-semibold">
-        {card.name}
-      </p>
-      <div className="flex gap-x-1">
-        {card.description.length > 0 && <Text className="w-4 h-4" />}
-        {card.cardEntities.map(entity => {
-          if (entity.type === "checklist") {
-            const completedTasks = entity.checklistItems.reduce((acc, item) => {
-              if (item.completed) {
-                acc += 1
-              }
-
-              return acc
-            }, 0)
-
-            const totalTasks = entity.checklistItems.length
-
-            return (
-              <div className="flex items-center">
-                <SquareCheck className="w-4 h-4" />
-                <span className="text-xs">{completedTasks}/{totalTasks}</span>
-              </div>
-            )
-          }
-        })}
-      </div>
-    </div>
   )
 }
 
