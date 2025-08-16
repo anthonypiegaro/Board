@@ -12,7 +12,7 @@ export default async function Projects() {
 
   return (
     <div className="w-full h-full mt-5 mb-25">
-      <div className="container mx-auto">
+      <div className="px-1 sm:px-2 md:px-4 lg:px-6 xl:px-8">
         <ProjectList initProjects={projects} />
       </div>
     </div>

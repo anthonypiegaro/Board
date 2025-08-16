@@ -1,7 +1,6 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { useRouter } from "next/navigation"
 import { Folder, Plus, Search } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -68,7 +67,11 @@ export function ProjectList({
       />
       <div className="w-full px-2 pb-10">
         <div className="w-full flex gap-4 my-10">
-          <Input className="grow max-w-lg" placeholder="Search for project..."/>
+          <Input 
+            className="grow max-w-lg" 
+            value={projectNameFilter}
+            onChange={e => setProjectNameFilter(e.target.value)}
+            placeholder="Search for project..."/>
           <Button className="shrink-0" onClick={() => setCreateProjectDialogOpen(true)}>
             <Plus />
             Add Project
