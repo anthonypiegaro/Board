@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils"
 import { Project } from "./page"
 import { CreateProjectDialog, CreateProjectSchema } from "./create-project-dialog"
 import { CreateBoardDialog } from "./create-board-dialog"
+import { ProjectName } from "./project-name"
 
 const gradient = [
   "from-indigo-300 to-fuchsia-600",
@@ -53,6 +54,19 @@ export function ProjectList({
 
   const createBoardDialogOpen = currentCreateBoardProjectId !== ""
 
+  const handleProjectNameChange = ({ id, name }: { id: string, name: string }) => {
+    setProjects(prev => prev.map(project => {
+      if (project.id === id) {
+        return ({
+          ...project,
+          name: name
+        })
+      }
+
+      return project
+    }))
+  }
+
   return (
     <>
       <CreateProjectDialog 
@@ -81,9 +95,11 @@ export function ProjectList({
           {filteredProjects.map(project => (
             <div key={project.id}>
               <div className="w-full border-b mb-4">
-                <h3 className="text-xl font-medium">
-                  {project.name}
-                </h3>
+                <ProjectName 
+                  projectId={project.id}
+                  projectName={project.name}
+                  onSuccess={handleProjectNameChange}
+                />
               </div>
               <div className="flex flex-wrap max-md:flex-nowrap max-md:w-full max-md:max-w-full max-md:overflow-x-scroll gap-4">
                 {project.boards.map((board, i) => {
