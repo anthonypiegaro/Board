@@ -44,7 +44,7 @@ export function ProjectName({
 
       onSuccess({
         id: projectId,
-        name: projectName
+        name: nameInput
       })
     }
   }
@@ -52,7 +52,7 @@ export function ProjectName({
   return (
     <input 
       className={cn(
-        "text-xl font-medium border-2 border-transparent rounded-md py-2 min-w-150 focus:outline-none focus:bg-input",
+        "grow text-xl font-medium border-2 border-transparent rounded-md py-2 focus:outline-none focus:bg-input",
         isError && "border-destructive bg-input"
       )}
       value={nameInput}

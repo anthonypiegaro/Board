@@ -11,6 +11,8 @@ import { Project } from "./page"
 import { CreateProjectDialog, CreateProjectSchema } from "./create-project-dialog"
 import { CreateBoardDialog } from "./create-board-dialog"
 import { ProjectName } from "./project-name"
+import { DeleteProjectDialog } from "./delete-project-dialog"
+import { ProjectOptions } from "./project-options"
 
 const gradient = [
   "from-indigo-300 to-fuchsia-600",
@@ -28,6 +30,7 @@ export function ProjectList({
   const [projectNameFilter, setProjectNameFilter] = useState("")
   const [createProjectDialogOpen, setCreateProjectDialogOpen] = useState(false)
   const [currentCreateBoardProjectId, setCurrentCreateBoardProjectId] = useState("")
+  const [deleteProjectDialogProject, setDeleteProjectDialogProject] = useState<{ id: string, name: string } | null>(null)
 
   const filteredProjects = useMemo(() => {
     return projects.filter(project => project.name.toLowerCase().includes(projectNameFilter.toLowerCase()))
@@ -67,6 +70,18 @@ export function ProjectList({
     }))
   }
 
+  const handleProjectDelete = (projectId: string) => {
+    setProjects(prev => prev.filter(project => project.id !== projectId))
+
+    handleDeleteProjectDialogOpenChange(false)
+  }
+
+  const handleDeleteProjectDialogOpenChange = (open: boolean) => {
+    if (!open) {
+      setDeleteProjectDialogProject(null)
+    }
+  }
+
   return (
     <>
       <CreateProjectDialog 
@@ -78,6 +93,13 @@ export function ProjectList({
         open={createBoardDialogOpen}
         onOpenChange={handleCreateBoardDialogOpenChange}
         projectId={currentCreateBoardProjectId}
+      />
+      <DeleteProjectDialog 
+        open={deleteProjectDialogProject !== null}
+        onOpenChange={handleDeleteProjectDialogOpenChange}
+        onDelete={handleProjectDelete}
+        projectId={deleteProjectDialogProject?.id ?? ""}
+        projectName={deleteProjectDialogProject?.name ?? ""}
       />
       <div className="w-full px-2 pb-10">
         <div className="w-full flex gap-4 my-10">
@@ -94,11 +116,21 @@ export function ProjectList({
         <div className="w-full flex flex-col gap-7">
           {filteredProjects.map(project => (
             <div key={project.id}>
-              <div className="w-full border-b mb-4">
+              <div className="flex flex-nowrap justify-between items-center w-full border-b mb-4">
                 <ProjectName 
                   projectId={project.id}
                   projectName={project.name}
                   onSuccess={handleProjectNameChange}
+                />
+                <ProjectOptions 
+                  onOpenDeleteProjectDialog={() => {
+                    console.log("Opening delete dialog with:", project.name)
+                    setDeleteProjectDialogProject({
+                      id: project.id,
+                      name: project.name
+                    })
+                  }
+                }
                 />
               </div>
               <div className="flex flex-wrap max-md:flex-nowrap max-md:w-full max-md:max-w-full max-md:overflow-x-scroll gap-4">
