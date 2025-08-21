@@ -38,14 +38,15 @@ export function CardDescription({
     onBlur()
   }
 
-  const handleFocus = () => {
+  const handleFocus = async () => {
+    await new Promise(resolve => setTimeout(resolve, 0))
     onFocus()
   }
 
   return (
     <div className="w-full">
       <Textarea
-        className="w-full h-50 resize-none mb-2"
+        className="w-full max-w-full h-50 resize-none mb-2 break-all text-muted-foreground focus:text-primary"
         value={descriptionInput}
         onChange={handleDescriptionInputChange}
         onBlur={handleBlur}

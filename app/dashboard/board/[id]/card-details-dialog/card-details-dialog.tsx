@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { EllipsisVertical } from "lucide-react"
 
 import { 
   Dialog,
@@ -17,8 +18,10 @@ import {
 
 import { CardDescription } from "./card-description"
 import { updateCardDescription } from "./update-card-description.action"
+import { CardDetailsHeaderName } from "./card-details-header-name"
+import { updateCardName } from "./update-card-name.action"
+
 import { Card } from "../types"
-import { EllipsisVertical } from "lucide-react"
 
 export function CardDetailsDialog({
   open,
@@ -56,6 +59,21 @@ export function CardDetailsDialog({
     }
   }
 
+  const handleNameChange = (name: string) => {
+    // persist to db
+    updateCardName({
+      id: card.id,
+      name
+    })
+
+    const updatedCard = {
+      ...card,
+      name: name
+    }
+
+    onChange(updatedCard)
+  }
+
   return (
     <Dialog 
       open={open} 
@@ -75,14 +93,21 @@ export function CardDetailsDialog({
         }}
       >
         <DialogHeader>
-          <DialogTitle className="flex justify-between items-center">
-            <p className="truncate">
+          <DialogTitle className="flex justify-between items-center max-w-full">
+            {/* <p className="truncate grow">
               {card.name}
-            </p>
+            </p> */}
+            <CardDetailsHeaderName 
+              cardId={card.id}
+              name={card.name}
+              onNameChange={handleNameChange}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+            />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button
-                  className="p-1 hover:bg-fuchsia-100/80 dark:hover:bg-fuchsia-400/80 rounded-md transition-all"
+                  className="p-1 hover:bg-fuchsia-100/80 dark:hover:bg-fuchsia-400/80 rounded-md transition-all shrink-0"
                 >
                   <EllipsisVertical className="w-5 h-5"/>
                 </button>
@@ -103,11 +128,9 @@ export function CardDetailsDialog({
           onChange={handleDescriptionChange}
           onFocus={() => {
             setIsFocused(true)
-            console.log("Description focused");
           }}
           onBlur={() => {
             setIsFocused(false)
-            console.log("Description blurred");
           }}
         />
       </DialogContent>
