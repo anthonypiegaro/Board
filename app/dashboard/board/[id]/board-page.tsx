@@ -8,9 +8,12 @@ import {
   DragOverEvent, 
   DragOverlay,
   DragStartEvent,
+  MouseSensor,
   PointerSensor, 
+  TouchSensor, 
   UniqueIdentifier, 
-  useSensor 
+  useSensor, 
+  useSensors
 } from "@dnd-kit/core"
 import { arrayMove, SortableContext } from "@dnd-kit/sortable"
 import { EllipsisVertical, Plus, SquareCheck, Text } from "lucide-react"
@@ -207,11 +210,24 @@ export function BoardPage({
     handleDeleteListDialogOpenChange(false)
   }
 
-  const sensor = useSensor(PointerSensor, {
-    activationConstraint: { 
-      distance: 15
-    }
-  })
+  // const sensor = useSensor(PointerSensor, {
+  //   activationConstraint: { 
+  //     distance: 15
+  //   }
+  // })
+
+  const sensors = useSensors(
+    useSensor(MouseSensor, {
+      activationConstraint: { 
+        distance: 15
+      }
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        distance: 15
+      }
+    })
+  );
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event
@@ -413,7 +429,7 @@ export function BoardPage({
 
   return (
     <DndContext
-      sensors={[sensor]}
+      sensors={sensors}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
@@ -634,7 +650,7 @@ function CardOverlay({
             const totalTasks = entity.checklistItems.length
 
             return (
-              <div className="flex items-center">
+              <div key={entity.entityId} className="flex items-center">
                 <SquareCheck className="w-4 h-4" />
                 <span className="text-xs">{completedTasks}/{totalTasks}</span>
               </div>
