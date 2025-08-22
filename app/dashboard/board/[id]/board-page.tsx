@@ -43,7 +43,7 @@ export function BoardPage({
   const [activeType, setActiveType] = useState<"list" | "card" | null>(null)
   const [ogActiveListId, setOgActiveListId] = useState<string | null>(null)
   const [boardNameEditing, setBoardNameEditing] = useState(false)
-  const [cardDetailsDialogCard, setCardDetailsDialogCard] = useState<Card | null>(null)
+  const [cardDetailsDialogCardId, setCardDetailsDialogCardId] = useState<string | null>(null)
   const [cardToDelete, setCardToDelete] = useState<Card | null>(null)
   const [deleteListDialogList, setDeleteListDialogList] = useState<{ listId: string, listName: string, numberOfCards: number } | null>(null)
 
@@ -56,6 +56,14 @@ export function BoardPage({
     () => board.lists.find(list => list.id === activeId),
     [activeId]
   )
+
+  const cardDetailsDialogCard = useMemo(() => {
+    if (cardDetailsDialogCardId == null) {
+      return null
+    } else {
+      return board.lists.flatMap(list => list.cards).find(card => card.id === cardDetailsDialogCardId) ?? null
+    }
+  }, [board, cardDetailsDialogCardId])
 
   const handleCreateListSuccess = (list: CreateListSchema) => {
     const newList: List = {
@@ -123,7 +131,7 @@ export function BoardPage({
 
   const handleCardDetailsDialogOpenChange = (open: boolean) => {
     if (!open) {
-      setCardDetailsDialogCard(null)
+      setCardDetailsDialogCardId(null)
     }
   }
 
@@ -165,7 +173,7 @@ export function BoardPage({
       }))
     }))
     setCardToDelete(null)
-    setCardDetailsDialogCard(null)
+    setCardDetailsDialogCardId(null)
   }
 
   const handleDeleteCardDialogOpenChange = (open: boolean) => {
@@ -474,7 +482,7 @@ export function BoardPage({
                 key={list.id} 
                 list={list} 
                 onOpenCreateCardDialog={handleCreateCardDialogOpen}
-                openCardDetails={setCardDetailsDialogCard}
+                openCardDetails={setCardDetailsDialogCardId}
                 onListMutation={handleListMutation}
                 onOpenDeleteListDialog={() => handleOpenDeleteListDialog(list)}
               />

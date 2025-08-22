@@ -26,6 +26,7 @@ import { Card } from "../types"
 import { CardChecklist } from "./card-checklist/card-checklist"
 import { ChecklistNameChangeSchema } from "./card-checklist/card-checklist-header"
 import { updateCardChecklistName } from "./card-checklist/update-card-checklist-name.action"
+import { DeleteChecklistDialog } from "./card-checklist/delete-checklist-dialog"
 
 export function CardDetailsDialog({
   open,
@@ -41,6 +42,7 @@ export function CardDetailsDialog({
   onOpenDeleteCardDialog: () => void
 }) {
   const [createChecklistDialogOpen, setCreateChecklistDialogOpen] = useState(false)
+  const [deleteChecklistDialogEntity, setDeleteChecklistDialogEntity] = useState<{ entityId: string, checklistName: string } | null>(null)
   const [isFocused, setIsFocused] = useState(false)
 
   const handleOpenChange = (open: boolean) => {
@@ -120,6 +122,20 @@ export function CardDetailsDialog({
     })
   }
 
+  const handleDeleteChecklistDialogOpenChange = (open: boolean) => {
+    if (!open) {
+      setDeleteChecklistDialogEntity(null)
+    }
+  }
+
+  const handleDeleteChecklistSuccess = (entityId: string) => {
+    onChange({
+      ...card,
+      cardEntities: card.cardEntities.filter(entity => entity.entityId !== entityId)
+    })
+    handleDeleteChecklistDialogOpenChange(false)
+  }
+
   return (
     <Dialog 
       open={open} 
@@ -130,6 +146,13 @@ export function CardDetailsDialog({
         open={createChecklistDialogOpen}
         onOpenChange={handleCreateChecklistDialogOpenChange}
         onSuccess={handleCreateChecklistSuccess}
+      />
+      <DeleteChecklistDialog 
+        open={deleteChecklistDialogEntity !== null}
+        onOpenChange={handleDeleteChecklistDialogOpenChange}
+        entityId={deleteChecklistDialogEntity?.entityId ?? ""}
+        checklistName={deleteChecklistDialogEntity?.checklistName ?? ""}
+        onSuccess={handleDeleteChecklistSuccess}
       />
       <DialogContent
         showCloseButton={false}
@@ -194,11 +217,16 @@ export function CardDetailsDialog({
         {card.cardEntities.map(entity => {
           if (entity.type === "checklist") {
             return (
-              <CardChecklist 
+              <CardChecklist
+                key={entity.entityId}
                 checklist={entity}
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
                 onChecklistNameChange={handleChecklistNameChange}
+                onOpenDeleteChecklistDialog={() => setDeleteChecklistDialogEntity({
+                  entityId: entity.entityId,
+                  checklistName: entity.name
+                })}
               />
             )
           }

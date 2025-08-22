@@ -4,6 +4,7 @@ import { SquareCheckBig } from "lucide-react"
 
 import { CardChecklistHeader, ChecklistNameChangeSchema } from "./card-checklist-header"
 import { CardEntity } from "../../types"
+import { ChecklistOptions } from "./checklist-options"
 
 export type CardChecklistEntity = CardEntity & { type: "checklist" }
 
@@ -11,12 +12,14 @@ export function CardChecklist({
   checklist,
   onBlur,
   onFocus,
-  onChecklistNameChange
+  onChecklistNameChange,
+  onOpenDeleteChecklistDialog
 }: {
   checklist: CardChecklistEntity
   onBlur: () => void
   onFocus: () => void
   onChecklistNameChange: (checklist: ChecklistNameChangeSchema) => void
+  onOpenDeleteChecklistDialog: () => void
 }) {
   return (
     <div className="w-full flex flex-col gap-x-4">
@@ -30,7 +33,9 @@ export function CardChecklist({
           onBlur={onBlur}
           onFocus={onFocus}
         />
-        <div>Checklist Options</div>
+        <ChecklistOptions 
+          onOpenDeleteChecklistDialog={onOpenDeleteChecklistDialog}
+        />
       </div>
     </div>
   )

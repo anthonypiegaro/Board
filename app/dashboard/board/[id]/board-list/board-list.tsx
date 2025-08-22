@@ -27,7 +27,7 @@ export function BoardList({
 }: {
   list: List
   onOpenCreateCardDialog: ({ listId, orderNumber }: { listId: string, orderNumber: number }) => void
-  openCardDetails: (card: Card) => void
+  openCardDetails: (cardId: string) => void
   onListMutation: (list: List) => void
   onOpenDeleteListDialog: () => void
 }) {

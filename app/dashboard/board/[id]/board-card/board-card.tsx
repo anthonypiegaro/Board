@@ -15,7 +15,7 @@ export function BoardCard({
 }: {
   card: Card
   listId: string
-  openCardDetails: (card: Card) => void
+  openCardDetails: (cardId: string) => void
 }) {
   const {
     attributes,
@@ -43,7 +43,7 @@ export function BoardCard({
         "relative flex flex-col rounded-md border-3 border-transparent bg-neutral-200 dark:bg-neutral-700 dark:ring dark:ring-neutral-500 dark:border-2 hover:border-3 hover:border-neutral-50 dark:hover:border-neutral-500 transition-all text-muted-foreground p-2 cursor-pointer",
         active?.id === card.id && "relative after:absolute after:-inset-1 after:bg-neutral-400 dark:after:bg-neutral-700 after:rounded-md"
       )}
-      onClick={() => openCardDetails(card)}
+      onClick={() => openCardDetails(card.id)}
       {...attributes} {...listeners} style={style} ref={setNodeRef}
     >
       <p className="text-sm font-semibold">

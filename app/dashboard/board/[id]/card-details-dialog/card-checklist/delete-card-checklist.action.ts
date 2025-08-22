@@ -5,12 +5,10 @@ import { redirect } from "next/navigation"
 import { eq } from "drizzle-orm"
 
 import { db } from "@/db/db"
-import { board, card, cardChecklist, cardEntity, list, project } from "@/db/schema"
+import { board, card, cardEntity, list, project } from "@/db/schema"
 import { auth } from "@/lib/auth"
 
-import { ChecklistNameChangeSchema } from "./card-checklist-header"
-
-export const updateCardChecklistName = async (values: ChecklistNameChangeSchema) => {
+export const deleteCardChecklist = async (entityId: string) => {
   const session = await auth.api.getSession({
     headers: await headers()
   })
@@ -30,7 +28,7 @@ export const updateCardChecklistName = async (values: ChecklistNameChangeSchema)
     .innerJoin(list, eq(card.listId, list.id))
     .innerJoin(board, eq(list.boardId, board.id))
     .innerJoin(project, eq(board.projectId, project.id))
-    .where(eq(cardEntity.id, values.entityId))
+    .where(eq(cardEntity.id, entityId))
   
   if (projectRes.length === 0) {
     throw new Error("Project does not exist")
@@ -40,5 +38,5 @@ export const updateCardChecklistName = async (values: ChecklistNameChangeSchema)
     throw new Error("You do not own this project. Cannot add card")
   }
 
-  await db.update(cardChecklist).set({ name: values.checklistName }).where(eq(cardChecklist.id, values.checklistId))
+  await db.delete(cardEntity).where(eq(cardEntity.id, entityId))
 }
