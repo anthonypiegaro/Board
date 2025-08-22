@@ -1,6 +1,6 @@
 "use client"
 
-import { ChangeEvent, useEffect, useState } from "react"
+import { ChangeEvent, useEffect, useRef, useState } from "react"
 import { horizontalListSortingStrategy, SortableContext, useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { EllipsisVertical, Plus } from "lucide-react"
@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils"
 
 import { BoardCard } from "../board-card/board-card"
 import { updateListName } from "../update-list-name.action"
-import { Card, List } from "../types"
+import { List } from "../types"
 
 export function BoardList({
   list,
@@ -33,6 +33,7 @@ export function BoardList({
 }) {
   const [nameInput, setNameInput] = useState(list.name)
   const [isError, setIsError] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     setNameInput(list.name)
@@ -85,6 +86,12 @@ export function BoardList({
     }
   }
 
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      inputRef.current?.blur()
+    }
+  }
+
   return (
     <div
       className={cn(
@@ -102,6 +109,8 @@ export function BoardList({
           value={nameInput}
           onChange={handleNameInputChange}
           onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
+          ref={inputRef}
         />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

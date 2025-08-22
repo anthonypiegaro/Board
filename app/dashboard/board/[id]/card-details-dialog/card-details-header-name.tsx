@@ -1,17 +1,15 @@
 "use client"
 
-import { ChangeEvent, useEffect, useState } from "react"
+import { ChangeEvent, useEffect, useRef, useState } from "react"
 
 import { cn } from "@/lib/utils"
 
 export function CardDetailsHeaderName({
-  cardId,
   name,
   onNameChange,
   onFocus,
   onBlur
 }: {
-  cardId: string
   name: string
   onNameChange: (name: string) => void
   onFocus: () => void
@@ -19,6 +17,7 @@ export function CardDetailsHeaderName({
 }) {
   const [nameInput, setNameInput] = useState(name)
   const [isError, setIsError] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     setNameInput(name)
@@ -51,6 +50,12 @@ export function CardDetailsHeaderName({
     onFocus()
   }
 
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      inputRef.current?.blur()
+    }
+  }
+
   return (
     <input 
       className={cn(
@@ -61,6 +66,8 @@ export function CardDetailsHeaderName({
       onChange={handleChange}
       onBlur={handleBlur}
       onFocus={handleFocus}
+      onKeyDown={handleKeyDown}
+      ref={inputRef}
     />
   )
 }

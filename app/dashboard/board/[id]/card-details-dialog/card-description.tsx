@@ -1,8 +1,9 @@
 "use client"
 
-import { ChangeEvent, useEffect, useState } from "react"
+import { ChangeEvent, useEffect, useRef, useState } from "react"
 
 import { Textarea } from "@/components/ui/textarea"
+import { Text } from "lucide-react"
 
 export function CardDescription({
   description,
@@ -16,7 +17,7 @@ export function CardDescription({
   onBlur: () => void
 }) {
   const [descriptionInput, setDescriptionInput] = useState(description)
-  const [isError, setIsError] = useState(false)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     setDescriptionInput(description)
@@ -43,8 +44,19 @@ export function CardDescription({
     onFocus()
   }
 
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+      event.preventDefault()
+      textareaRef.current?.blur()
+    }
+  }
+
   return (
-    <div className="w-full">
+    <div className="flex flex-col w-full">
+      <div className="flex items-center gap-x-2 mb-1">
+        <Text className="w-4 h-4" />
+        <p className="font-medium">Description</p>
+      </div>
       <Textarea
         className="w-full max-w-full h-50 resize-none mb-2 break-all text-muted-foreground focus:text-primary"
         value={descriptionInput}
@@ -52,6 +64,8 @@ export function CardDescription({
         onBlur={handleBlur}
         autoFocus={false}
         onFocus={handleFocus}
+        onKeyDown={handleKeyDown}
+        ref={textareaRef}
       />
       <p className="text-xs text-right text-muted-foreground">
         {descriptionInput.length}/5000
