@@ -170,7 +170,6 @@ export function CardDetailsDialog({
         <DialogHeader>
           <DialogTitle className="flex justify-between items-center max-w-full">
             <CardDetailsHeaderName 
-              cardId={card.id}
               name={card.name}
               onNameChange={handleNameChange}
               onFocus={() => setIsFocused(true)}
