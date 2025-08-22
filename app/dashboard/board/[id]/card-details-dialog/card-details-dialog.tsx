@@ -23,8 +23,9 @@ import { updateCardName } from "./update-card-name.action"
 import { CreateChecklistDialog, CreateChecklistSchema } from "./create-checklist-dialog"
 
 import { Card } from "../types"
-import { cardEntity } from "@/db/schema"
-import { createChecklist } from "./create-checklist.action"
+import { CardChecklist } from "./card-checklist/card-checklist"
+import { ChecklistNameChangeSchema } from "./card-checklist/card-checklist-header"
+import { updateCardChecklistName } from "./card-checklist/update-card-checklist-name.action"
 
 export function CardDetailsDialog({
   open,
@@ -100,6 +101,25 @@ export function CardDetailsDialog({
     })
   }
 
+  const handleChecklistNameChange = (values: ChecklistNameChangeSchema) => {
+    // persist to db
+    updateCardChecklistName(values)
+
+    onChange({
+      ...card,
+      cardEntities: card.cardEntities.map(entity => {
+        if (entity.entityId === values.entityId) {
+          return {
+            ...entity,
+            name: values.checklistName
+          }
+        } else {
+          return entity
+        }
+      })
+    })
+  }
+
   return (
     <Dialog 
       open={open} 
@@ -126,9 +146,6 @@ export function CardDetailsDialog({
       >
         <DialogHeader>
           <DialogTitle className="flex justify-between items-center max-w-full">
-            {/* <p className="truncate grow">
-              {card.name}
-            </p> */}
             <CardDetailsHeaderName 
               cardId={card.id}
               name={card.name}
@@ -174,6 +191,18 @@ export function CardDetailsDialog({
             setIsFocused(false)
           }}
         />
+        {card.cardEntities.map(entity => {
+          if (entity.type === "checklist") {
+            return (
+              <CardChecklist 
+                checklist={entity}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                onChecklistNameChange={handleChecklistNameChange}
+              />
+            )
+          }
+        })}
       </DialogContent>
     </Dialog>
   )
