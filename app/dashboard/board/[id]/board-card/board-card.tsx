@@ -64,7 +64,7 @@ export function BoardCard({
             const totalTasks = entity.checklistItems.length
 
             return (
-              <div className="flex items-center">
+              <div key={entity.entityId} className="flex items-center">
                 <SquareCheck className="w-4 h-4" />
                 <span className="text-xs">{completedTasks}/{totalTasks}</span>
               </div>

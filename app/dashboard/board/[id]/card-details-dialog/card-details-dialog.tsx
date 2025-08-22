@@ -20,8 +20,11 @@ import { CardDescription } from "./card-description"
 import { updateCardDescription } from "./update-card-description.action"
 import { CardDetailsHeaderName } from "./card-details-header-name"
 import { updateCardName } from "./update-card-name.action"
+import { CreateChecklistDialog, CreateChecklistSchema } from "./create-checklist-dialog"
 
 import { Card } from "../types"
+import { cardEntity } from "@/db/schema"
+import { createChecklist } from "./create-checklist.action"
 
 export function CardDetailsDialog({
   open,
@@ -36,6 +39,7 @@ export function CardDetailsDialog({
   card: Card
   onOpenDeleteCardDialog: () => void
 }) {
+  const [createChecklistDialogOpen, setCreateChecklistDialogOpen] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
 
   const handleOpenChange = (open: boolean) => {
@@ -60,7 +64,6 @@ export function CardDetailsDialog({
   }
 
   const handleNameChange = (name: string) => {
-    // persist to db
     updateCardName({
       id: card.id,
       name
@@ -74,11 +77,40 @@ export function CardDetailsDialog({
     onChange(updatedCard)
   }
 
+  const handleCreateChecklistDialogOpenChange = (open: boolean) => {
+    if (!open) {
+      setCreateChecklistDialogOpen(false)
+    }
+  }
+
+  const handleCreateChecklistSuccess = (checklist: CreateChecklistSchema) => {
+    onChange({
+      ...card,
+      cardEntities: [
+        ...card.cardEntities,
+        {
+          entityId: checklist.entityId,
+          orderNumber: 0,
+          checklistId: checklist.id,
+          name: checklist.name,
+          type: "checklist",
+          checklistItems: []
+        }
+      ]
+    })
+  }
+
   return (
     <Dialog 
       open={open} 
       onOpenChange={handleOpenChange}
     >
+      <CreateChecklistDialog 
+        cardId={card.id}
+        open={createChecklistDialogOpen}
+        onOpenChange={handleCreateChecklistDialogOpenChange}
+        onSuccess={handleCreateChecklistSuccess}
+      />
       <DialogContent
         showCloseButton={false}
         onOpenAutoFocus={e => e.preventDefault()}
@@ -113,6 +145,15 @@ export function CardDetailsDialog({
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
+                <DropdownMenuItem
+                  onClick={() => {
+                    setCreateChecklistDialogOpen(true)
+                  }}
+                >
+                  <p>
+                    + Checklist
+                  </p>
+                </DropdownMenuItem>
                 <DropdownMenuItem 
                   onClick={onOpenDeleteCardDialog}
                   variant="destructive"

@@ -18,6 +18,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Boards",
   description: "The best tool for organizing your project management.",
+  other: {
+    "apple-mobile-web-app-title": "Board",
+  },
 };
 
 export default function RootLayout({
