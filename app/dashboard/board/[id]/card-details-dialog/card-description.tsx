@@ -58,7 +58,7 @@ export function CardDescription({
         <p className="font-medium">Description</p>
       </div>
       <Textarea
-        className="w-full max-w-full h-50 resize-none mb-2 break-all text-muted-foreground focus:text-primary"
+        className="w-full max-w-full h-50 resize-none mb-2 whitespace-pre-wrap break-words text-muted-foreground focus:text-primary"
         value={descriptionInput}
         onChange={handleDescriptionInputChange}
         onBlur={handleBlur}
