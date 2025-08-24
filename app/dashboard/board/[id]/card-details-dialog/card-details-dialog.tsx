@@ -170,6 +170,31 @@ export function CardDetailsDialog({
     })
   }
 
+  const handleCheckboxClick = (values: { checklistItemId: string, checklistItemCompleted: boolean }) => {
+    onChange({
+      ...card,
+      cardEntities: card.cardEntities.map((entity => {
+        if (entity.type === "checklist") {
+          return {
+            ...entity,
+            checklistItems: entity.checklistItems.map(item => {
+              if (item.id === values.checklistItemId) {
+                return {
+                  ...item,
+                  completed: values.checklistItemCompleted
+                }
+              } else {
+                return item
+              }
+            })
+          }
+        } else {
+          return entity
+        }
+      }))
+    })
+  }
+
   return (
     <Dialog 
       open={open} 
@@ -271,6 +296,7 @@ export function CardDetailsDialog({
                   checklistId: entity.checklistId,
                   checklistItemOrderNumber: entity.checklistItems.length
                 })}
+                onCheckboxClick={handleCheckboxClick}
               />
             )
           }
