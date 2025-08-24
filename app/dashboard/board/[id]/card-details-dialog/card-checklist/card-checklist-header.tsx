@@ -49,7 +49,7 @@ export function CardChecklistHeader({
 
   const handleBlur = async () => {
     await new Promise(resolve => setTimeout(resolve, 0))
-    if (!isError) {
+    if (!isError && nameInput !== checklistName) {
       onSuccess({
         entityId: entityId,
         checklistId: checklistId,

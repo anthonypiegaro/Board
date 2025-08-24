@@ -1,10 +1,13 @@
 "use client"
 
-import { SquareCheckBig } from "lucide-react"
+import { Plus, SquareCheckBig } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
 
 import { CardChecklistHeader, ChecklistNameChangeSchema } from "./card-checklist-header"
 import { CardEntity } from "../../types"
 import { ChecklistOptions } from "./checklist-options"
+import { CardChecklistItemList } from "./card-checklist-item-list"
 
 export type CardChecklistEntity = CardEntity & { type: "checklist" }
 
@@ -13,13 +16,15 @@ export function CardChecklist({
   onBlur,
   onFocus,
   onChecklistNameChange,
-  onOpenDeleteChecklistDialog
+  onOpenDeleteChecklistDialog,
+  onOpenAddChecklistItemDialog
 }: {
   checklist: CardChecklistEntity
   onBlur: () => void
   onFocus: () => void
   onChecklistNameChange: (checklist: ChecklistNameChangeSchema) => void
   onOpenDeleteChecklistDialog: () => void
+  onOpenAddChecklistItemDialog: () => void
 }) {
   return (
     <div className="w-full flex flex-col gap-x-4">
@@ -37,6 +42,19 @@ export function CardChecklist({
           onOpenDeleteChecklistDialog={onOpenDeleteChecklistDialog}
         />
       </div>
+      <CardChecklistItemList 
+        items={checklist.checklistItems}
+      />
+      <Button 
+        variant="ghost" 
+        className="flex self-start items-center justify-start rounded-md hover:bg-fuchsia-100/80 dark:hover:bg-fuchsia-400/80 transition-all gap-x-1 px-2 py-1 cursor-pointer"
+        onClick={onOpenAddChecklistItemDialog}
+      >
+        <Plus className="w-4 h-4" />
+        <h3 className="font-medium">
+          Add an item
+        </h3>
+      </Button>
     </div>
   )
 }

@@ -27,6 +27,12 @@ import { CardChecklist } from "./card-checklist/card-checklist"
 import { ChecklistNameChangeSchema } from "./card-checklist/card-checklist-header"
 import { updateCardChecklistName } from "./card-checklist/update-card-checklist-name.action"
 import { DeleteChecklistDialog } from "./card-checklist/delete-checklist-dialog"
+import { AddChecklistItemDialog, CreateChecklistItemSchema } from "./card-checklist/add-checklist-item-dialog"
+
+export type AddChecklistItemDialogEntity = {
+  checklistId: string
+  checklistItemOrderNumber: number
+}
 
 export function CardDetailsDialog({
   open,
@@ -43,6 +49,7 @@ export function CardDetailsDialog({
 }) {
   const [createChecklistDialogOpen, setCreateChecklistDialogOpen] = useState(false)
   const [deleteChecklistDialogEntity, setDeleteChecklistDialogEntity] = useState<{ entityId: string, checklistName: string } | null>(null)
+  const [addChecklistItemDialogEntity, setAddChecklistItemDialogEntity] = useState<AddChecklistItemDialogEntity | null>(null)
   const [isFocused, setIsFocused] = useState(false)
 
   const handleOpenChange = (open: boolean) => {
@@ -136,6 +143,33 @@ export function CardDetailsDialog({
     handleDeleteChecklistDialogOpenChange(false)
   }
 
+  const handleAddChecklistItemDialogOpenChange = (open: boolean) => {
+    if (!open) {
+      setAddChecklistItemDialogEntity(null)
+    }
+  }
+
+  const handleAddChecklistItemSuccess = (item: CreateChecklistItemSchema) => {
+    onChange({
+      ...card,
+      cardEntities: card.cardEntities.map(card => {
+        if (card.checklistId === item.checklistId) {
+          return {
+            ...card,
+            checklistItems: [...card.checklistItems, {
+              id: item.checklistItemId,
+              name: item.checklistItemName,
+              completed: false,
+              orderNumber: item.checklistItemOrderNumber
+            }]
+          }
+        } else {
+          return card
+        }
+      })
+    })
+  }
+
   return (
     <Dialog 
       open={open} 
@@ -153,6 +187,13 @@ export function CardDetailsDialog({
         entityId={deleteChecklistDialogEntity?.entityId ?? ""}
         checklistName={deleteChecklistDialogEntity?.checklistName ?? ""}
         onSuccess={handleDeleteChecklistSuccess}
+      />
+      <AddChecklistItemDialog 
+        checklistId={addChecklistItemDialogEntity?.checklistId ?? ""}
+        checklistItemOrderNumber={addChecklistItemDialogEntity?.checklistItemOrderNumber ?? 0}
+        open={addChecklistItemDialogEntity !== null}
+        onOpenChange={handleAddChecklistItemDialogOpenChange}
+        onSuccess={handleAddChecklistItemSuccess}
       />
       <DialogContent
         showCloseButton={false}
@@ -225,6 +266,10 @@ export function CardDetailsDialog({
                 onOpenDeleteChecklistDialog={() => setDeleteChecklistDialogEntity({
                   entityId: entity.entityId,
                   checklistName: entity.name
+                })}
+                onOpenAddChecklistItemDialog={() => setAddChecklistItemDialogEntity({
+                  checklistId: entity.checklistId,
+                  checklistItemOrderNumber: entity.checklistItems.length
                 })}
               />
             )
