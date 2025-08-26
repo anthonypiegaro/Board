@@ -271,6 +271,7 @@ export function CardDetailsDialog({
         onSuccess={handleAddChecklistItemSuccess}
       />
       <DialogContent
+        className="min-w-0"
         showCloseButton={false}
         onOpenAutoFocus={e => e.preventDefault()}
         onPointerDownOutside={e => {

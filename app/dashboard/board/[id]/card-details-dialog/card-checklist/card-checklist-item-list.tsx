@@ -26,7 +26,7 @@ export function CardChecklistItemList({
   onBlur: () => void
 }) {
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col w-full max-w-full">
       {items.map(item => (
         <CardChecklistItem 
           key={item.id} 
@@ -85,10 +85,10 @@ function CardChecklistItem({
   }
 
   return (
-    <div className="flex items-center py-1 gap-x-2 text-muted-foreground">
+    <div className="w-full max-w-full flex items-center gap-x-1 text-muted-foreground">
       <Button 
         variant="ghost" 
-        className="p-1 shrink-0"
+        className="p-0 shrink-0"
         onClick={handleCheckboxClick}
       >
         {
