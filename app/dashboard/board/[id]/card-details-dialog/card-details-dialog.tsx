@@ -195,6 +195,27 @@ export function CardDetailsDialog({
     })
   }
 
+  const handleChecklistItemDelete = (checklistItemId: string) => {
+    onChange({
+      ...card,
+      cardEntities: card.cardEntities.map(entity => {
+        if (entity.type === "checklist") {
+          return {
+            ...entity,
+            checklistItems: entity.checklistItems
+              .filter(item => item.id !== checklistItemId)
+              .map((item, index) => ({
+                ...item,
+                orderNumber: index
+              }))
+          }
+        } else {
+          return entity
+        }
+      })
+    })
+  }
+
   return (
     <Dialog 
       open={open} 
@@ -297,6 +318,7 @@ export function CardDetailsDialog({
                   checklistItemOrderNumber: entity.checklistItems.length
                 })}
                 onCheckboxClick={handleCheckboxClick}
+                onChecklistItemDelete={handleChecklistItemDelete}
               />
             )
           }
