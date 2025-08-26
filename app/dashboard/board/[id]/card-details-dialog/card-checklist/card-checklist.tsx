@@ -19,7 +19,8 @@ export function CardChecklist({
   onOpenDeleteChecklistDialog,
   onOpenAddChecklistItemDialog,
   onCheckboxClick,
-  onChecklistItemDelete
+  onChecklistItemDelete,
+  onChecklistItemNameChange
 }: {
   checklist: CardChecklistEntity
   onBlur: () => void
@@ -29,6 +30,7 @@ export function CardChecklist({
   onOpenAddChecklistItemDialog: () => void
   onCheckboxClick: ({ checklistItemId, checklistItemCompleted }: { checklistItemId: string, checklistItemCompleted: boolean }) => void
   onChecklistItemDelete: (checklistItemId: string) => void
+  onChecklistItemNameChange: ({ id, name }: { id: string, name: string }) => void
 }) {
   return (
     <div className="w-full flex flex-col gap-x-4">
@@ -50,6 +52,9 @@ export function CardChecklist({
         items={checklist.checklistItems}
         onCheckboxClick={onCheckboxClick}
         onDelete={onChecklistItemDelete}
+        onItemNameChange={onChecklistItemNameChange}
+        onFocus={onFocus}
+        onBlur={onBlur}
       />
       <Button 
         variant="ghost" 

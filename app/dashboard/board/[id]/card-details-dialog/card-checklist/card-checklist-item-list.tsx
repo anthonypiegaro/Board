@@ -8,15 +8,22 @@ import { ChecklistItem } from "../../types"
 import { updateChecklistItemCompleted } from "./update-checklist-item-completed.action"
 import { CardChecklistItemOptions } from "./card-checklist-item-options"
 import { deleteChecklistItem } from "./delete-checklist-item.action"
+import { CardChecklistItemName } from "./card-checklist-item-name"
 
 export function CardChecklistItemList({
   items,
   onCheckboxClick,
-  onDelete
+  onItemNameChange,
+  onDelete,
+  onFocus,
+  onBlur
 }: {
   items: ChecklistItem[]
   onCheckboxClick: ({ checklistItemId, checklistItemCompleted }: { checklistItemId: string, checklistItemCompleted: boolean }) => void
   onDelete: (checklistItemId: string) => void
+  onItemNameChange: ({ id, name }: { id: string, name: string }) => void
+  onFocus: () => void
+  onBlur: () => void
 }) {
   return (
     <div className="flex flex-col">
@@ -25,7 +32,10 @@ export function CardChecklistItemList({
           key={item.id} 
           item={item} 
           onCheckboxClick={onCheckboxClick}
+          onNameChange={onItemNameChange}
           onDelete={onDelete}
+          onFocus={onFocus}
+          onBlur={onBlur}
         />
       ))}
     </div>
@@ -35,11 +45,17 @@ export function CardChecklistItemList({
 function CardChecklistItem({
   item,
   onCheckboxClick,
-  onDelete
+  onNameChange,
+  onDelete,
+  onFocus,
+  onBlur
 }: {
   item: ChecklistItem
   onCheckboxClick: ({ checklistItemId, checklistItemCompleted }: { checklistItemId: string, checklistItemCompleted: boolean }) => void
+  onNameChange: ({ id, name }: { id: string, name: string }) => void
   onDelete: (checklistItemId: string) => void
+  onFocus: () => void
+  onBlur: () => void
 }) {
   const handleCheckboxClick = () => {
     // persist to db
@@ -61,6 +77,13 @@ function CardChecklistItem({
     onDelete(item.id)
   }
 
+  const handleNameChange = (name: string) => {
+    onNameChange({
+      id: item.id,
+      name: name
+    })
+  }
+
   return (
     <div className="flex items-center py-1 gap-x-2 text-muted-foreground">
       <Button 
@@ -74,7 +97,12 @@ function CardChecklistItem({
           : <Square className="h-4 w-4" />
         }
       </Button>
-      <p className="flex-1">{item.name}</p>
+      <CardChecklistItemName 
+        name={item.name}
+        onSuccess={handleNameChange}
+        onBlur={onBlur}
+        onFocus={onFocus}
+      />
       <CardChecklistItemOptions onDelete={handleDelete}/>
     </div>
   )

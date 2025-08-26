@@ -8,7 +8,7 @@ import { db } from "@/db/db"
 import { board, card, cardChecklist, cardChecklistItem, cardEntity, list, project } from "@/db/schema"
 import { auth } from "@/lib/auth"
 
-export const updateChecklistItemCompleted = async (values: { checklistItemId: string, checklistItemCompleted: boolean }) => {
+export const updateChecklistItemName = async ({ id, name }: { id: string, name: string }) => {
   const session = await auth.api.getSession({
     headers: await headers()
   })
@@ -30,7 +30,7 @@ export const updateChecklistItemCompleted = async (values: { checklistItemId: st
     .innerJoin(list, eq(card.listId, list.id))
     .innerJoin(board, eq(list.boardId, board.id))
     .innerJoin(project, eq(board.projectId, project.id))
-    .where(eq(cardChecklistItem.id, values.checklistItemId))
+    .where(eq(cardChecklistItem.id, id))
   
   if (projectRes.length === 0) {
     throw new Error("Project does not exist")
@@ -41,6 +41,6 @@ export const updateChecklistItemCompleted = async (values: { checklistItemId: st
   }
 
   await db.update(cardChecklistItem).set({
-    completed: values.checklistItemCompleted
-  }).where(eq(cardChecklistItem.id, values.checklistItemId))
+    name: name
+  }).where(eq(cardChecklistItem.id, id))
 }

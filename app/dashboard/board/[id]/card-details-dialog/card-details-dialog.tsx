@@ -28,6 +28,7 @@ import { ChecklistNameChangeSchema } from "./card-checklist/card-checklist-heade
 import { updateCardChecklistName } from "./card-checklist/update-card-checklist-name.action"
 import { DeleteChecklistDialog } from "./card-checklist/delete-checklist-dialog"
 import { AddChecklistItemDialog, CreateChecklistItemSchema } from "./card-checklist/add-checklist-item-dialog"
+import { updateChecklistItemName } from "./card-checklist/update-checklist-item-name.action"
 
 export type AddChecklistItemDialogEntity = {
   checklistId: string
@@ -216,6 +217,34 @@ export function CardDetailsDialog({
     })
   }
 
+  const handleChecklistItemNameChange = ({ id, name }: { id: string, name: string }) => {
+    // persist to db
+    updateChecklistItemName({ id, name })
+
+    onChange({
+      ...card,
+      cardEntities: card.cardEntities.map(entity => {
+        if (entity.type === "checklist") {
+          return {
+            ...entity,
+            checklistItems: entity.checklistItems.map(item => {
+              if (item.id === id) {
+                return {
+                  ...item,
+                  name: name
+                }
+              } else {
+                return item
+              }
+            })
+          }
+        } else {
+          return entity
+        }
+      })
+    })
+  }
+
   return (
     <Dialog 
       open={open} 
@@ -319,6 +348,7 @@ export function CardDetailsDialog({
                 })}
                 onCheckboxClick={handleCheckboxClick}
                 onChecklistItemDelete={handleChecklistItemDelete}
+                onChecklistItemNameChange={handleChecklistItemNameChange}
               />
             )
           }
