@@ -320,6 +320,14 @@ export function BoardPageTest({
                     orderNumber: index
                   }))
                 }))
+
+                setTimeout(() => updateListOrder({
+                  boardId: board.id,
+                  lists: newListOrder.map((listId, index) => ({
+                    listId,
+                    orderNumber: index
+                  }))
+                }), 8000)
               }
             }}
           >
