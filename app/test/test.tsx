@@ -3,7 +3,7 @@
 import { useRef, useState } from "react"
 import { CollisionPriority } from "@dnd-kit/abstract"
 import { move } from "@dnd-kit/helpers"
-import { DragDropProvider, useDroppable } from "@dnd-kit/react"
+import { DragDropProvider } from "@dnd-kit/react"
 import { useSortable } from "@dnd-kit/react/sortable"
 
 import { Card } from "@/components/ui/card"
@@ -77,7 +77,7 @@ function List({
   })
 
   return (
-    <Card className="w-75 gap-y-2" ref={ref}>
+    <Card className="w-75 gap-y-2 touch-none" ref={ref}>
       <p className="text-center text-lg font-medium">{id}</p>
       {cards.map((cardId, index) => <SortCard key={cardId} id={cardId} listId={id} index={index} />)}
     </Card>
@@ -102,7 +102,10 @@ function SortCard({
   })
 
   return (
-    <Card className="p-1" ref={ref} data-dragging={isDragging}>
+    <Card 
+      className="p-1 touch-none" 
+      ref={ref} 
+      data-dragging={isDragging}>
       {id}
     </Card>
   )

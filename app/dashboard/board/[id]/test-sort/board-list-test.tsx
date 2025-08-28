@@ -85,7 +85,7 @@ export function BoardListTest({
 
   return (
     <div
-      className="relative w-75 p-2 rounded-md bg-neutral-300 dark:bg-neutral-600 dark:border dark:border-neutral-500 shrink-0"
+      className="touch-none relative w-75 p-2 rounded-md bg-neutral-300 dark:bg-neutral-600 dark:border dark:border-neutral-500 shrink-0"
       ref={ref}
     >
       <div className="w-full px-2 py-3 flex justify-between items-center">
