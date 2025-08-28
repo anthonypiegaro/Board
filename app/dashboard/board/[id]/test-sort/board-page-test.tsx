@@ -327,7 +327,39 @@ export function BoardPageTest({
                     listId,
                     orderNumber: index
                   }))
-                }), 8000)
+                }), 500)
+              }
+
+              if (source?.type === "card" && source?.id !== null) {
+                // persist card movement to the db
+                const oldListId = Object.keys(previousCardIdsByListId.current)
+                  .find(listId => previousCardIdsByListId.current[listId].includes(source.id as string))
+                const newListId = Object.keys(cardIdsByListId)
+                  .find(listId => cardIdsByListId[listId].includes(source.id as string))
+                
+                if (!oldListId || !newListId) {
+                  return
+                }
+
+                const updateData: UpdateCardListIdAndOrderValues = {
+                  listId: newListId,
+                  cardId: source.id as string,
+                  cards: cardIdsByListId[newListId].map((cardId, index) => ({
+                    cardId,
+                    orderNumber: index
+                  }))
+                }
+
+                if (oldListId !== newListId) {
+                  cardIdsByListId[newListId].forEach((cardId, index) => {
+                    updateData.cards.push({
+                      cardId,
+                      orderNumber: index
+                    })
+                  })
+                }
+
+                setTimeout(() => updateCardListIdAndOrder(updateData), 500)
               }
             }}
           >
