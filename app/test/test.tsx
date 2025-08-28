@@ -15,6 +15,8 @@ export function Test() {
     "listC": []
   })
 
+  const [listOrder, setListOrder] = useState(() => Object.keys(cards))
+
   return (
     <div className="w-dvw h-dvh">
       <h1 className="text-3xl semibold">
@@ -23,10 +25,25 @@ export function Test() {
       <div className="w-full p-5 mx-auto flex gap-x-4">
         <DragDropProvider
           onDragOver={(event => {
+            const { source, target } = event.operation
+
+            if (source?.type === "list") {
+              return
+            }
+
             setCards(cards => move(cards, event))
           })}
+          onDragEnd={event => {
+            const { source, target } = event.operation
+
+            if (event.canceled || source?.type !== "list") {
+              return
+            }
+
+            setListOrder(lists => move(lists, event))
+          }}
         >
-          {Object.entries(cards).map(([listId, cardIds]) => <List key={listId} id={listId} cards={cardIds} />)}
+          {Object.entries(cards).map(([listId, cardIds], index) => <List key={listId} id={listId} cards={cardIds} index={index} />)}
         </DragDropProvider>
       </div>
     </div>
@@ -35,16 +52,19 @@ export function Test() {
 
 function List({
   id,
-  cards
+  cards,
+  index
 }: {
   id: string
   cards: string[]
+  index: number
 }) {
-  const { ref } = useDroppable({
+  const { ref } = useSortable({
     id,
+    index,
     type: "list",
-    accept: "card",
-    collisionPriority: CollisionPriority.Low
+    collisionPriority: CollisionPriority.Low,
+    accept: ["card", "list"],
   })
 
   return (

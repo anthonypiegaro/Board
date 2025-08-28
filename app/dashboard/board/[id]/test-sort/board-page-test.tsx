@@ -48,6 +48,17 @@ export function BoardPageTest({
     }, {} as Record<string, Card>)
   }, [board])
 
+  const listOrder = useMemo(() => {
+    return board.lists.map(list => list.id)
+  }, [board])
+
+  const listDataByListId = useMemo(() => {
+    return board.lists.reduce((acc, list) => {
+      acc[list.id] = list
+      return acc
+    }, {} as Record<string, List>)
+  }, [board])
+
   const cardDetailsDialogCard = useMemo(() => {
     if (cardDetailsDialogCardId == null) {
       return null
@@ -258,6 +269,12 @@ export function BoardPageTest({
         <div className="flex flex-nowrap items-start gap-x-4">
           <DragDropProvider
             onDragOver={event => {
+              const { source, target } = event.operation
+
+              if (source?.type === "list") {
+                return
+              }
+
               const newCardIdsByListId = move(cardIdsByListId, event)
 
               setBoard(prev => ({
@@ -268,11 +285,26 @@ export function BoardPageTest({
                 }))
               }))
             }}
+            onDragEnd={event => {
+              const { source, target } = event.operation
+
+              if (event.canceled || source?.type !== "list") {
+                return
+              }
+
+              const newListOrder = move(listOrder, event)
+
+              setBoard(prev => ({
+                ...prev,
+                lists: newListOrder.map(listId => listDataByListId[listId])
+              }))
+            }}
           >
-            {board.lists.map(list => (
+            {board.lists.map((list, index) => (
               <BoardListTest
                 key={list.id} 
-                list={list} 
+                list={list}
+                index={index}
                 onOpenCreateCardDialog={handleCreateCardDialogOpen}
                 openCardDetails={setCardDetailsDialogCardId}
                 onListMutation={handleListMutation}

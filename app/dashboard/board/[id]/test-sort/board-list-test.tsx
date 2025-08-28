@@ -2,7 +2,7 @@
 
 import { ChangeEvent, useEffect, useRef, useState } from "react"
 import { CollisionPriority } from "@dnd-kit/abstract"
-import { useDroppable } from "@dnd-kit/react"
+import { useSortable } from "@dnd-kit/react/sortable"
 import { EllipsisVertical, Plus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -20,12 +20,14 @@ import { List } from "../types"
 
 export function BoardListTest({
   list,
+  index,
   onOpenCreateCardDialog,
   openCardDetails,
   onListMutation,
   onOpenDeleteListDialog
 }: {
   list: List
+  index: number
   onOpenCreateCardDialog: ({ listId, orderNumber }: { listId: string, orderNumber: number }) => void
   openCardDetails: (cardId: string) => void
   onListMutation: (list: List) => void
@@ -35,11 +37,12 @@ export function BoardListTest({
   const [isError, setIsError] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const { ref } = useDroppable({
+  const { ref } = useSortable({
     id: list.id,
+    index,
     type: "list",
-    accept: "card",
-    collisionPriority: CollisionPriority.Low
+    collisionPriority: CollisionPriority.Low,
+    accept: ["card", "list"]
   })
 
   useEffect(() => {
