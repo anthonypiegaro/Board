@@ -11,5 +11,5 @@ export default async function Board({
 
   const board = await getBoard(id)
 
-  return <BoardPageTest initBoard={board} />
+  return <BoardPage initBoard={board} />
 }
