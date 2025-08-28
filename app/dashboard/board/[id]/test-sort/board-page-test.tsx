@@ -288,7 +288,10 @@ export function BoardPageTest({
                 ...prev,
                 lists: prev.lists.map(list => ({
                   ...list,
-                  cards: newCardIdsByListId[list.id].map(cardId => cardDataByCardId[cardId])
+                  cards: newCardIdsByListId[list.id].map((cardId, index) => ({
+                    ...cardDataByCardId[cardId],
+                    orderNumber: index
+                  }))
                 }))
               }))
             }}
@@ -312,7 +315,10 @@ export function BoardPageTest({
 
                 setBoard(prev => ({
                   ...prev,
-                  lists: newListOrder.map(listId => listDataByListId[listId])
+                  lists: newListOrder.map((listId, index) => ({
+                    ...listDataByListId[listId],
+                    orderNumber: index
+                  }))
                 }))
               }
             }}
