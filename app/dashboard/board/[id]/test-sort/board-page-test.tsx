@@ -1,6 +1,6 @@
 "use client"
 
-import { ChangeEvent, useEffect, useMemo, useState } from "react"
+import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react"
 import { move } from "@dnd-kit/helpers"
 import { DragDropProvider } from "@dnd-kit/react"
 import { Plus } from "lucide-react"
@@ -58,6 +58,9 @@ export function BoardPageTest({
       return acc
     }, {} as Record<string, List>)
   }, [board])
+
+  const previousCardIdsByListId = useRef(cardIdsByListId)
+  const previousCardDataByCardId = useRef(cardDataByCardId)
 
   const cardDetailsDialogCard = useMemo(() => {
     if (cardDetailsDialogCardId == null) {
@@ -268,6 +271,10 @@ export function BoardPageTest({
         />
         <div className="flex flex-nowrap items-start gap-x-4">
           <DragDropProvider
+            onDragStart={() => {
+              previousCardIdsByListId.current = cardIdsByListId
+              previousCardDataByCardId.current = cardDataByCardId
+            }}
             onDragOver={event => {
               const { source, target } = event.operation
 
@@ -288,16 +295,26 @@ export function BoardPageTest({
             onDragEnd={event => {
               const { source, target } = event.operation
 
-              if (event.canceled || source?.type !== "list") {
-                return
+              if (event.canceled) {
+                if (source?.type === "card") {
+                  setBoard(prev => ({
+                    ...prev,
+                    lists: prev.lists.map(list => ({
+                      ...list,
+                      cards: previousCardIdsByListId.current[list.id].map(cardId => previousCardDataByCardId.current[cardId])
+                    }))
+                  }))
+                }
               }
 
-              const newListOrder = move(listOrder, event)
+              if (source?.type === "list") {
+                const newListOrder = move(listOrder, event)
 
-              setBoard(prev => ({
-                ...prev,
-                lists: newListOrder.map(listId => listDataByListId[listId])
-              }))
+                setBoard(prev => ({
+                  ...prev,
+                  lists: newListOrder.map(listId => listDataByListId[listId])
+                }))
+              }
             }}
           >
             {board.lists.map((list, index) => (

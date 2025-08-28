@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { CollisionPriority } from "@dnd-kit/abstract"
 import { move } from "@dnd-kit/helpers"
 import { DragDropProvider, useDroppable } from "@dnd-kit/react"
@@ -14,7 +14,7 @@ export function Test() {
     "listB": ["cardD"],
     "listC": []
   })
-
+  const previousCards = useRef(cards)
   const [listOrder, setListOrder] = useState(() => Object.keys(cards))
 
   return (
@@ -24,6 +24,9 @@ export function Test() {
       </h1>
       <div className="w-full p-5 mx-auto flex gap-x-4">
         <DragDropProvider
+          onDragStart={() => {
+            previousCards.current = cards
+          }}
           onDragOver={(event => {
             const { source, target } = event.operation
 
@@ -36,11 +39,17 @@ export function Test() {
           onDragEnd={event => {
             const { source, target } = event.operation
 
-            if (event.canceled || source?.type !== "list") {
+            if (event.canceled) {
+              if (source?.type === "card") {
+                setCards(previousCards.current)
+              }
+
               return
             }
 
-            setListOrder(lists => move(lists, event))
+            if (source?.type === "list") {
+              setListOrder(lists => move(lists, event))
+            }
           }}
         >
           {Object.entries(cards).map(([listId, cardIds], index) => <List key={listId} id={listId} cards={cardIds} index={index} />)}
