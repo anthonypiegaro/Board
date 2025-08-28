@@ -1,6 +1,9 @@
 "use client"
 
 import { useState } from "react"
+import { CollisionPriority } from "@dnd-kit/abstract"
+import { move } from "@dnd-kit/helpers"
+import { DragDropProvider, useDroppable } from "@dnd-kit/react"
 import { useSortable } from "@dnd-kit/react/sortable"
 
 import { Card } from "@/components/ui/card"
@@ -18,7 +21,13 @@ export function Test() {
         Test Page for Multi-Container Sortable Drag and Drop
       </h1>
       <div className="w-full p-5 mx-auto flex gap-x-4">
-        {Object.entries(cards).map(([listId, cardIds]) => <List key={listId} id={listId} cards={cardIds} />)}
+        <DragDropProvider
+          onDragOver={(event => {
+            setCards(cards => move(cards, event))
+          })}
+        >
+          {Object.entries(cards).map(([listId, cardIds]) => <List key={listId} id={listId} cards={cardIds} />)}
+        </DragDropProvider>
       </div>
     </div>
   )
@@ -31,8 +40,15 @@ function List({
   id: string
   cards: string[]
 }) {
+  const { ref } = useDroppable({
+    id,
+    type: "list",
+    accept: "card",
+    collisionPriority: CollisionPriority.Low
+  })
+
   return (
-    <Card className="w-75 gap-y-2">
+    <Card className="w-75 gap-y-2" ref={ref}>
       <p className="text-center text-lg font-medium">{id}</p>
       {cards.map((cardId, index) => <SortCard key={cardId} id={cardId} listId={id} index={index} />)}
     </Card>

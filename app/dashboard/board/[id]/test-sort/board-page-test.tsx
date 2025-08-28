@@ -1,7 +1,9 @@
 "use client"
 
 import { ChangeEvent, useEffect, useMemo, useState } from "react"
-import { EllipsisVertical, Plus, SquareCheck, Text } from "lucide-react"
+import { move } from "@dnd-kit/helpers"
+import { DragDropProvider } from "@dnd-kit/react"
+import { Plus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -31,6 +33,20 @@ export function BoardPageTest({
   const [cardDetailsDialogCardId, setCardDetailsDialogCardId] = useState<string | null>(null)
   const [cardToDelete, setCardToDelete] = useState<Card | null>(null)
   const [deleteListDialogList, setDeleteListDialogList] = useState<{ listId: string, listName: string, numberOfCards: number } | null>(null)
+
+  const cardIdsByListId = useMemo(() => {
+    return board.lists.reduce((acc, list) => {
+      acc[list.id] = list.cards.map(card => card.id)
+      return acc
+    }, {} as Record<string, string[]>)
+  }, [board])
+
+  const cardDataByCardId = useMemo(() => {
+    return board.lists.flatMap(list => list.cards).reduce((acc, card) => {
+      acc[card.id] = card
+      return acc
+    }, {} as Record<string, Card>)
+  }, [board])
 
   const cardDetailsDialogCard = useMemo(() => {
     if (cardDetailsDialogCardId == null) {
@@ -240,6 +256,19 @@ export function BoardPageTest({
           onSuccess={handleBoardNameEditSuccess} 
         />
         <div className="flex flex-nowrap items-start gap-x-4">
+          <DragDropProvider
+            onDragOver={event => {
+              const newCardIdsByListId = move(cardIdsByListId, event)
+
+              setBoard(prev => ({
+                ...prev,
+                lists: prev.lists.map(list => ({
+                  ...list,
+                  cards: newCardIdsByListId[list.id].map(cardId => cardDataByCardId[cardId])
+                }))
+              }))
+            }}
+          >
             {board.lists.map(list => (
               <BoardListTest
                 key={list.id} 
@@ -250,6 +279,7 @@ export function BoardPageTest({
                 onOpenDeleteListDialog={() => handleOpenDeleteListDialog(list)}
               />
             ))}
+          </DragDropProvider>
           <AddListButton onClick={() => setCreateListDialogOpen(true)} />
         </div>
       </div>

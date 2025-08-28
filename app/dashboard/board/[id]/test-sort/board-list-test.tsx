@@ -1,6 +1,8 @@
 "use client"
 
 import { ChangeEvent, useEffect, useRef, useState } from "react"
+import { CollisionPriority } from "@dnd-kit/abstract"
+import { useDroppable } from "@dnd-kit/react"
 import { EllipsisVertical, Plus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -32,6 +34,13 @@ export function BoardListTest({
   const [nameInput, setNameInput] = useState(list.name)
   const [isError, setIsError] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  const { ref } = useDroppable({
+    id: list.id,
+    type: "list",
+    accept: "card",
+    collisionPriority: CollisionPriority.Low
+  })
 
   useEffect(() => {
     setNameInput(list.name)
@@ -74,6 +83,7 @@ export function BoardListTest({
   return (
     <div
       className="relative w-75 p-2 rounded-md bg-neutral-300 dark:bg-neutral-600 dark:border dark:border-neutral-500 shrink-0"
+      ref={ref}
     >
       <div className="w-full px-2 py-3 flex justify-between items-center">
         <input 
