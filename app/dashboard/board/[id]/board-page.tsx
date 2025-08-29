@@ -1,27 +1,14 @@
 "use client"
 
-import { ChangeEvent, useEffect, useMemo, useState } from "react"
-import { createPortal } from "react-dom"
-import {
-  DndContext, 
-  DragEndEvent, 
-  DragOverEvent, 
-  DragOverlay,
-  DragStartEvent,
-  MouseSensor,
-  PointerSensor, 
-  TouchSensor, 
-  UniqueIdentifier, 
-  useSensor, 
-  useSensors
-} from "@dnd-kit/core"
-import { arrayMove, SortableContext } from "@dnd-kit/sortable"
-import { EllipsisVertical, Plus, SquareCheck, Text } from "lucide-react"
+import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react"
+import { move } from "@dnd-kit/helpers"
+import { DragDropProvider } from "@dnd-kit/react"
+import { Plus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-import { BoardList } from "./board-list/board-list"
+import { BoardListTest } from "./board-list/board-list"
 import { Board, Card, List } from "./types"
 import { CreateListDialog, CreateListSchema } from "./create-list-dialog"
 import { CreateCardDialog, CreateCardSchema } from "./create-card-dialog"
@@ -42,23 +29,38 @@ export function BoardPage({
   const [createCardDialogOpen, setCreateCardDialogOpen] = useState(false)
   const [createCardDialogListId, setCreateCardDialogListId] = useState("")
   const [createCardDialogOrderNumber, setCreateCardDialogOrderNumber] = useState(-1)
-  const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null)
-  const [activeType, setActiveType] = useState<"list" | "card" | null>(null)
-  const [ogActiveListId, setOgActiveListId] = useState<string | null>(null)
   const [boardNameEditing, setBoardNameEditing] = useState(false)
   const [cardDetailsDialogCardId, setCardDetailsDialogCardId] = useState<string | null>(null)
   const [cardToDelete, setCardToDelete] = useState<Card | null>(null)
   const [deleteListDialogList, setDeleteListDialogList] = useState<{ listId: string, listName: string, numberOfCards: number } | null>(null)
 
-  const activeCard = useMemo(
-    () => board.lists.find(list => list.id === ogActiveListId)?.cards.find(card => card.id === activeId),
-    [activeId]
-  )
+  const cardIdsByListId = useMemo(() => {
+    return board.lists.reduce((acc, list) => {
+      acc[list.id] = list.cards.map(card => card.id)
+      return acc
+    }, {} as Record<string, string[]>)
+  }, [board])
 
-  const activeList = useMemo(
-    () => board.lists.find(list => list.id === activeId),
-    [activeId]
-  )
+  const cardDataByCardId = useMemo(() => {
+    return board.lists.flatMap(list => list.cards).reduce((acc, card) => {
+      acc[card.id] = card
+      return acc
+    }, {} as Record<string, Card>)
+  }, [board])
+
+  const listOrder = useMemo(() => {
+    return board.lists.map(list => list.id)
+  }, [board])
+
+  const listDataByListId = useMemo(() => {
+    return board.lists.reduce((acc, list) => {
+      acc[list.id] = list
+      return acc
+    }, {} as Record<string, List>)
+  }, [board])
+
+  const previousCardIdsByListId = useRef(cardIdsByListId)
+  const previousCardDataByCardId = useRef(cardDataByCardId)
 
   const cardDetailsDialogCard = useMemo(() => {
     if (cardDetailsDialogCardId == null) {
@@ -210,230 +212,8 @@ export function BoardPage({
     handleDeleteListDialogOpenChange(false)
   }
 
-  // const sensor = useSensor(PointerSensor, {
-  //   activationConstraint: { 
-  //     distance: 15
-  //   }
-  // })
-
-  const sensors = useSensors(
-    useSensor(MouseSensor, {
-      activationConstraint: { 
-        distance: 15
-      }
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        distance: 15
-      }
-    })
-  );
-
-  const handleDragStart = (event: DragStartEvent) => {
-    const { active } = event
-
-    setActiveId(active.id)
-    setActiveType(active.data.current?.type)
-    if (active.data.current?.type === "card") {
-      setActiveType("card")
-      setOgActiveListId(active.data.current.listId)
-    }
-  }
-
-  const handleDragOver = (event: DragOverEvent) => {
-    const { active, over } = event
-
-    if (!over?.id || activeType === "list") {
-      return
-    }
-
-    const activeContainer = active.data.current?.listId
-    const overContainer = over.data.current?.type === "list" ? over.id : over.data.current?.listId
-
-    if (!activeContainer || !overContainer) {
-      return
-    }
-
-    if (activeContainer !== overContainer) {
-      const activeItems = board.lists.find(list => list.id === activeContainer)?.cards
-      const overItems = board.lists.find(list => list.id === overContainer)?.cards
-
-      if (!activeItems || !overItems) {
-        return
-      }
-
-      const activeIndex = activeItems.findIndex(card => card.id === active.id)
-      const overIndex = overItems.findIndex(card => card.id === over.id)
-
-      let newIndex: number
-
-      if (over.data.current?.type === "list") {
-        newIndex = overItems.length + 1
-      } else {
-        const isBelowOverItem =
-          over &&
-          active.rect.current.translated &&
-          active.rect.current.translated.top >
-            over.rect.top + over.rect.height
-
-        const modifier = isBelowOverItem ? 1 : 0
-
-        newIndex = overIndex >= 0 ? overIndex + modifier : overItems.length + 1
-      }
-
-      const newBoard: Board = {
-        ...board,
-        lists: board.lists.map(list => {
-          if (list.id === activeContainer) {
-            return {
-              ...list,
-              cards: list.cards.filter(card => card.id !== active.id).map((card, index) => ({
-                ...card,
-                orderNumber: index
-              }))
-            }
-          }
-
-          if (list.id === overContainer) {
-            return {
-              ...list,
-              cards: [
-                ...overItems.slice(0, newIndex),
-                activeItems[activeIndex],
-                ...overItems.slice(
-                  newIndex,
-                  overItems.length
-                )
-              ].map((card, index) => ({
-                ...card,
-                orderNumber: index
-              }))
-            }
-          }
-
-          return list
-        })
-      }
-
-      setBoard(newBoard)
-    } else {
-      const oldIndex = board.lists.find(list => list.id === active.data.current?.listId)?.cards.findIndex(card => card.id === active.id) ?? -1
-      const newIndex = board.lists.find(list => list.id === over.data.current?.listId)?.cards.findIndex(card => card.id === over.id) ?? -1
-
-      if (oldIndex < 0 || newIndex < 0) {
-        return
-      }
-
-      setBoard(prev => ({
-        ...prev,
-        lists: prev.lists.map(list => {
-          if (list.id === active.data.current?.listId) {
-            return {
-              ...list,
-              cards: arrayMove(list.cards, oldIndex, newIndex).map((card, index) => ({
-                ...card,
-                orderNumber: index
-              }))
-            }
-          }
-
-          return list
-        })
-      }))
-    }
-  }
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event
-
-    if (active.data.current?.type === "list") {
-      if (active.id && over?.id) {
-        const oldIndex = board.lists.findIndex(list => list.id === active.id)
-        const newIndex = board.lists.findIndex(list => list.id === over.id)
-
-        const newLists = arrayMove(board.lists, oldIndex, newIndex).map((list, index) => ({
-          ...list,
-          orderNumber: index
-        }))
-
-        setBoard(prev => ({
-          ...prev,
-          lists: newLists
-        }))
-
-        // persist new list order numbers to the db
-        const updateListOrderData = {
-          boardId: board.id,
-          lists: newLists.map(list => ({
-            listId: list.id,
-            orderNumber: list.orderNumber
-          }))
-        }
-        updateListOrder(updateListOrderData)
-      }
-    }
-
-    if (active.data.current?.type === "card") {
-      const listId = active.data.current?.listId
-      const cardId = active.id
-
-      if (!listId || !cardId) {
-        return
-      }
-
-      const values: UpdateCardListIdAndOrderValues = {
-        cardId: cardId as string,
-        listId,
-        cards: []
-      }
-
-      if (ogActiveListId !== active.data.current?.listId) {
-        const oldList = board.lists.find(list => list.id === ogActiveListId)
-        const newList = board.lists.find(list => list.id === listId)
-
-        if (!oldList || !newList) {
-          return
-        }
-
-        oldList.cards.forEach((card, index) => {
-          values.cards.push({
-            cardId: card.id,
-            orderNumber: index
-          })
-        })
-
-        newList.cards.forEach((card, index) => {
-          values.cards.push({
-            cardId: card.id,
-            orderNumber: index
-          })
-        })
-      } else {
-        const list = board.lists.find(list => list.id === ogActiveListId)
-
-        if (!list) {
-          return
-        }
-
-        list.cards.forEach((card, index) => {
-          values.cards.push({
-            cardId: card.id,
-            orderNumber: index
-          })
-        })
-      }
-
-      updateCardListIdAndOrder(values)
-    }
-  }
-
   return (
-    <DndContext
-      sensors={sensors}
-      onDragStart={handleDragStart}
-      onDragOver={handleDragOver}
-      onDragEnd={handleDragEnd}
-    >
+    <>
       <CreateListDialog 
         open={createListDialogOpen}
         onOpenChange={setCreateListDialogOpen}
@@ -490,38 +270,115 @@ export function BoardPage({
           onSuccess={handleBoardNameEditSuccess} 
         />
         <div className="flex flex-nowrap items-start gap-x-4">
-          <SortableContext
-            items={board.lists.map(list => list.id)}
+          <DragDropProvider
+            onDragStart={() => {
+              previousCardIdsByListId.current = cardIdsByListId
+              previousCardDataByCardId.current = cardDataByCardId
+            }}
+            onDragOver={event => {
+              const { source, target } = event.operation
+
+              if (source?.type === "list") {
+                return
+              }
+
+              const newCardIdsByListId = move(cardIdsByListId, event)
+
+              setBoard(prev => ({
+                ...prev,
+                lists: prev.lists.map(list => ({
+                  ...list,
+                  cards: newCardIdsByListId[list.id].map((cardId, index) => ({
+                    ...cardDataByCardId[cardId],
+                    orderNumber: index
+                  }))
+                }))
+              }))
+            }}
+            onDragEnd={event => {
+              const { source, target } = event.operation
+
+              if (event.canceled) {
+                if (source?.type === "card") {
+                  setBoard(prev => ({
+                    ...prev,
+                    lists: prev.lists.map(list => ({
+                      ...list,
+                      cards: previousCardIdsByListId.current[list.id].map(cardId => previousCardDataByCardId.current[cardId])
+                    }))
+                  }))
+                }
+              }
+
+              if (source?.type === "list") {
+                const newListOrder = move(listOrder, event)
+
+                setBoard(prev => ({
+                  ...prev,
+                  lists: newListOrder.map((listId, index) => ({
+                    ...listDataByListId[listId],
+                    orderNumber: index
+                  }))
+                }))
+
+                setTimeout(() => updateListOrder({
+                  boardId: board.id,
+                  lists: newListOrder.map((listId, index) => ({
+                    listId,
+                    orderNumber: index
+                  }))
+                }), 500)
+              }
+
+              if (source?.type === "card" && source?.id !== null) {
+                // persist card movement to the db
+                const oldListId = Object.keys(previousCardIdsByListId.current)
+                  .find(listId => previousCardIdsByListId.current[listId].includes(source.id as string))
+                const newListId = Object.keys(cardIdsByListId)
+                  .find(listId => cardIdsByListId[listId].includes(source.id as string))
+                
+                if (!oldListId || !newListId) {
+                  return
+                }
+
+                const updateData: UpdateCardListIdAndOrderValues = {
+                  listId: newListId,
+                  cardId: source.id as string,
+                  cards: cardIdsByListId[newListId].map((cardId, index) => ({
+                    cardId,
+                    orderNumber: index
+                  }))
+                }
+
+                if (oldListId !== newListId) {
+                  cardIdsByListId[newListId].forEach((cardId, index) => {
+                    updateData.cards.push({
+                      cardId,
+                      orderNumber: index
+                    })
+                  })
+                }
+
+                setTimeout(() => updateCardListIdAndOrder(updateData), 500)
+              }
+            }}
           >
-            {board.lists.map(list => (
-              <BoardList 
+            {board.lists.map((list, index) => (
+              <BoardListTest
                 key={list.id} 
-                list={list} 
+                list={list}
+                index={index}
                 onOpenCreateCardDialog={handleCreateCardDialogOpen}
                 openCardDetails={setCardDetailsDialogCardId}
                 onListMutation={handleListMutation}
                 onOpenDeleteListDialog={() => handleOpenDeleteListDialog(list)}
               />
             ))}
-          </SortableContext>
+          </DragDropProvider>
           <AddListButton onClick={() => setCreateListDialogOpen(true)} />
         </div>
       </div>
-      {
-        createPortal(
-          <DragOverlay>
-            {
-              activeId 
-                ?  activeType === "list" 
-                  ? activeList && <ListOverlay list={activeList} />
-                  : activeCard && <CardOverlay card={activeCard} />
-                : null 
-            }
-          </DragOverlay>,
-          document.body
-        )
-      }
-    </DndContext>
+    </>
   )
 }
 
@@ -619,119 +476,6 @@ function AddListButton({ onClick }: { onClick: () => void }) {
           Add a list
         </h3>
       </Button>
-    </div>
-  )
-}
-
-function CardOverlay({
-  card
-}: {
-  card: Card
-}) {
-  return (
-    <div 
-      className="flex flex-col rounded-md border-3 border-transparent bg-neutral-200 dark:bg-neutral-700 dark:ring dark:ring-neutral-500 dark:border-2 hover:border-3 hover:border-neutral-50 dark:hover:border-neutral-500 transition-all text-muted-foreground p-2 cursor-grabbing rotate-5 after:absolute after:-inset-1 after:bg-neutral-400/30 after:rounded-md"
-    >
-      <p className="text-sm font-semibold">
-        {card.name}
-      </p>
-      <div className="flex gap-x-1">
-        {card.description.length > 0 && <Text className="w-4 h-4" />}
-        {card.cardEntities.map(entity => {
-          if (entity.type === "checklist") {
-            const completedTasks = entity.checklistItems.reduce((acc, item) => {
-              if (item.completed) {
-                acc += 1
-              }
-
-              return acc
-            }, 0)
-
-            const totalTasks = entity.checklistItems.length
-
-            return (
-              <div key={entity.entityId} className="flex items-center">
-                <SquareCheck className="w-4 h-4" />
-                <span className="text-xs">{completedTasks}/{totalTasks}</span>
-              </div>
-            )
-          }
-        })}
-      </div>
-    </div>
-  )
-}
-
-function ListOverlay({
-  list
-}: {
-  list: List
-}) {
-  return (
-    <div
-      className="w-75 p-2 rounded-md bg-neutral-300 dark:bg-neutral-600 dark:border dark:border-neutral-500 shrink-0"
-    >
-      <div className="w-full px-4 py-3 flex justify-between items-center">
-        <h3 className="text-lg font-semibold">
-          {list.name}
-        </h3>
-        <div className="p-1 hover:bg-fuchsia-100/80 dark:hover:bg-fuchsia-400/80 rounded-md transition-all">
-          <EllipsisVertical className="w-4 h-4" />
-        </div>
-      </div>
-      <div className="flex flex-col gap-y-2">
-        {list.cards.map(card => (
-          <ListOverlayCard key={card.id} card={card} />
-        ))}
-        <Button 
-          variant="ghost" 
-          className="flex items-center w-full justify-start rounded-md hover:bg-fuchsia-100/80 dark:hover:bg-fuchsia-400/80 transition-all gap-x-1 px-2 py-1 cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <h3 className="font-medium">
-            Add a card
-          </h3>
-        </Button>
-      </div>
-    </div>
-  )
-}
-
-function ListOverlayCard({
-  card
-}: {
-  card: Card
-}) {
-  return (
-    <div 
-      className="relative flex flex-col rounded-md border-3 border-transparent bg-neutral-200 dark:bg-neutral-700 dark:ring dark:ring-neutral-500 dark:border-2 hover:border-3 hover:border-neutral-50 dark:hover:border-neutral-500 transition-all text-muted-foreground p-2 cursor-pointer"
-    >
-      <p className="text-sm font-semibold">
-        {card.name}
-      </p>
-      <div className="flex gap-x-1">
-        {card.description.length > 0 && <Text className="w-4 h-4" />}
-        {card.cardEntities.map(entity => {
-          if (entity.type === "checklist") {
-            const completedTasks = entity.checklistItems.reduce((acc, item) => {
-              if (item.completed) {
-                acc += 1
-              }
-
-              return acc
-            }, 0)
-
-            const totalTasks = entity.checklistItems.length
-
-            return (
-              <div className="flex items-center">
-                <SquareCheck className="w-4 h-4" />
-                <span className="text-xs">{completedTasks}/{totalTasks}</span>
-              </div>
-            )
-          }
-        })}
-      </div>
     </div>
   )
 }

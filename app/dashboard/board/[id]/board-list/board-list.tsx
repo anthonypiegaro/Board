@@ -1,8 +1,8 @@
 "use client"
 
 import { ChangeEvent, useEffect, useRef, useState } from "react"
-import { horizontalListSortingStrategy, SortableContext, useSortable } from "@dnd-kit/sortable"
-import { CSS } from "@dnd-kit/utilities"
+import { CollisionPriority } from "@dnd-kit/abstract"
+import { useSortable } from "@dnd-kit/react/sortable"
 import { EllipsisVertical, Plus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -18,14 +18,16 @@ import { BoardCard } from "../board-card/board-card"
 import { updateListName } from "../update-list-name.action"
 import { List } from "../types"
 
-export function BoardList({
+export function BoardListTest({
   list,
+  index,
   onOpenCreateCardDialog,
   openCardDetails,
   onListMutation,
   onOpenDeleteListDialog
 }: {
   list: List
+  index: number
   onOpenCreateCardDialog: ({ listId, orderNumber }: { listId: string, orderNumber: number }) => void
   openCardDetails: (cardId: string) => void
   onListMutation: (list: List) => void
@@ -35,28 +37,17 @@ export function BoardList({
   const [isError, setIsError] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
+  const { ref } = useSortable({
+    id: list.id,
+    index,
+    type: "list",
+    collisionPriority: CollisionPriority.Low,
+    accept: ["card", "list"]
+  })
+
   useEffect(() => {
     setNameInput(list.name)
   }, [list])
-
-  const {
-    active,
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition
-  } = useSortable({
-    id: list.id,
-    data: {
-      type: "list"
-    }
-  })
-
-  const style = {
-    transform: CSS.Translate.toString(transform),
-    transition,
-  }
 
   const handleNameInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value
@@ -94,11 +85,8 @@ export function BoardList({
 
   return (
     <div
-      className={cn(
-        "relative w-75 p-2 rounded-md bg-neutral-300 dark:bg-neutral-600 dark:border dark:border-neutral-500 shrink-0",
-        active?.id === list.id && "after:absolute after:rounded-md after:inset-0 after:bg-background"
-      )}
-      {...listeners} {...attributes} ref={setNodeRef} style={style}
+      className="touch-none relative w-75 p-2 rounded-md bg-neutral-300 dark:bg-neutral-600 dark:border dark:border-neutral-500 shrink-0"
+      ref={ref}
     >
       <div className="w-full px-2 py-3 flex justify-between items-center">
         <input 
@@ -132,19 +120,15 @@ export function BoardList({
         </DropdownMenu>
       </div>
       <div className="flex flex-col gap-y-2">
-        <SortableContext
-          items={list.cards.map(card => card.id)}
-          strategy={horizontalListSortingStrategy}
-        >
-          {list.cards.map(card => (
-            <BoardCard 
-              key={card.id} 
-              card={card} 
-              listId={list.id}
-              openCardDetails={openCardDetails}
-            />
-          ))}
-        </SortableContext>
+        {list.cards.map((card, index) => (
+          <BoardCard
+            key={card.id}
+            index={index}
+            card={card} 
+            listId={list.id}
+            openCardDetails={openCardDetails}
+          />
+        ))}
         <Button 
           variant="ghost" 
           className="flex items-center w-full justify-start rounded-md hover:bg-fuchsia-100/80 dark:hover:bg-fuchsia-400/80 transition-all gap-x-1 px-2 py-1 cursor-pointer"

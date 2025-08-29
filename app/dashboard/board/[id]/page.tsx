@@ -1,5 +1,4 @@
 import { BoardPage } from "./board-page"
-import { BoardPageTest } from "./test-sort/board-page-test"
 import { getBoard } from "./get-board"
 
 export default async function Board({
@@ -11,5 +10,5 @@ export default async function Board({
 
   const board = await getBoard(id)
 
-  return <BoardPageTest initBoard={board} />
+  return <BoardPage initBoard={board} />
 }
