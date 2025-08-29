@@ -8,6 +8,7 @@ import { CardChecklistHeader, ChecklistNameChangeSchema } from "./card-checklist
 import { CardEntity } from "../../types"
 import { ChecklistOptions } from "./checklist-options"
 import { CardChecklistItemList } from "./card-checklist-item-list"
+import { UpdateChecklistItemOrderSchema } from "./update-checklist-item-order.action"
 
 export type CardChecklistEntity = CardEntity & { type: "checklist" }
 
@@ -16,6 +17,7 @@ export function CardChecklist({
   onBlur,
   onFocus,
   onChecklistNameChange,
+  onChecklistItemOrderChange,
   onOpenDeleteChecklistDialog,
   onOpenAddChecklistItemDialog,
   onCheckboxClick,
@@ -26,6 +28,7 @@ export function CardChecklist({
   onBlur: () => void
   onFocus: () => void
   onChecklistNameChange: (checklist: ChecklistNameChangeSchema) => void
+  onChecklistItemOrderChange: (values: UpdateChecklistItemOrderSchema) => void
   onOpenDeleteChecklistDialog: () => void
   onOpenAddChecklistItemDialog: () => void
   onCheckboxClick: ({ checklistItemId, checklistItemCompleted }: { checklistItemId: string, checklistItemCompleted: boolean }) => void
@@ -50,9 +53,11 @@ export function CardChecklist({
       </div>
       <CardChecklistItemList 
         items={checklist.checklistItems}
+        checklistId={checklist.checklistId}
         onCheckboxClick={onCheckboxClick}
         onDelete={onChecklistItemDelete}
         onItemNameChange={onChecklistItemNameChange}
+        onChecklistItemOrderChange={onChecklistItemOrderChange}
         onFocus={onFocus}
         onBlur={onBlur}
       />

@@ -29,6 +29,7 @@ import { updateCardChecklistName } from "./card-checklist/update-card-checklist-
 import { DeleteChecklistDialog } from "./card-checklist/delete-checklist-dialog"
 import { AddChecklistItemDialog, CreateChecklistItemSchema } from "./card-checklist/add-checklist-item-dialog"
 import { updateChecklistItemName } from "./card-checklist/update-checklist-item-name.action"
+import { updateChecklistItemOrder, UpdateChecklistItemOrderSchema } from "./card-checklist/update-checklist-item-order.action"
 
 export type AddChecklistItemDialogEntity = {
   checklistId: string
@@ -245,6 +246,34 @@ export function CardDetailsDialog({
     })
   }
 
+  const handleChecklistItemOrderChange = (values: UpdateChecklistItemOrderSchema) => {
+    // persist to db
+    updateChecklistItemOrder(values)
+
+    onChange({
+      ...card,
+      cardEntities: card.cardEntities.map(entity => {
+        if (entity.type === "checklist") {
+          if (entity.checklistId === values.checklistId) {
+            return {
+              ...entity,
+              checklistItems: entity.checklistItems
+                .map(item => ({
+                  ...item,
+                  orderNumber: values.items.find(i => i.itemId === item.id)?.orderNumber ?? item.orderNumber
+                }))
+                .sort((a, b) => a.orderNumber - b.orderNumber)
+            }
+          } else {
+            return entity
+          }
+        } else {
+          return entity
+        }
+      })
+    })
+  }
+
   return (
     <Dialog 
       open={open} 
@@ -350,6 +379,7 @@ export function CardDetailsDialog({
                 onCheckboxClick={handleCheckboxClick}
                 onChecklistItemDelete={handleChecklistItemDelete}
                 onChecklistItemNameChange={handleChecklistItemNameChange}
+                onChecklistItemOrderChange={handleChecklistItemOrderChange}
               />
             )
           }
